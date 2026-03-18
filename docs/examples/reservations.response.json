@@ -1,0 +1,10 @@
+{
+  "reservationId": "rsv_9f1d7a2c",
+  "tableId": "T2",
+  "date": "2026-03-21",
+  "time": "19:30",
+  "partySize": 4,
+  "status": "CONFIRMED",
+  "createdAt": "2026-03-17T12:42:10Z",
+  "message": "Broneering kinnitatud"
+}

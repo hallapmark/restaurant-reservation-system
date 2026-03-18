@@ -1,0 +1,89 @@
+{
+  "layoutId": "demo-floor-01",
+  "venueWidthMeters": 22.4,
+  "venueHeightMeters": 13.8,
+  "zones": [
+    {
+      "code": "INDOOR",
+      "label": "Saal",
+      "description": "Peasaal, vaiksem ala"
+    },
+    {
+      "code": "TERRACE",
+      "label": "Terrass",
+      "description": "Õueala"
+    },
+    {
+      "code": "PRIVATE",
+      "label": "Era ruum",
+      "description": "Poolprivaatne ruum"
+    }
+  ],
+  "tables": [
+    {
+      "tableId": "T1",
+      "label": "T1",
+      "capacity": 2,
+      "zone": "INDOOR",
+      "center": {
+        "x": 4.2,
+        "y": 3.0
+      },
+      "width": 1.3,
+      "height": 1.2,
+      "rotationDegrees": 0
+    },
+    {
+      "tableId": "T2",
+      "label": "T2",
+      "capacity": 4,
+      "zone": "INDOOR",
+      "center": {
+        "x": 8.7,
+        "y": 3.2
+      },
+      "width": 1.6,
+      "height": 1.2,
+      "rotationDegrees": 0
+    },
+    {
+      "tableId": "T3",
+      "label": "T3",
+      "capacity": 6,
+      "zone": "TERRACE",
+      "center": {
+        "x": 14.1,
+        "y": 4.6
+      },
+      "width": 2.0,
+      "height": 1.5,
+      "rotationDegrees": 15
+    },
+    {
+      "tableId": "T4",
+      "label": "T4",
+      "capacity": 4,
+      "zone": "TERRACE",
+      "center": {
+               "x": 17.9,
+        "y": 5.5
+      },
+      "width": 1.6,
+      "height": 1.3,
+      "rotationDegrees": -10
+    },
+    {
+      "tableId": "T5",
+      "label": "P1",
+      "capacity": 8,
+      "zone": "PRIVATE",
+      "center": {
+        "x": 11.5,
+        "y": 10.4
+      },
+      "width": 2.4,
+      "height": 1.7,
+      "rotationDegrees": 0
+    }
+  ]
+}

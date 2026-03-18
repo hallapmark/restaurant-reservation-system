@@ -1,0 +1,13 @@
+{
+  "topRecommendationId": "T2",
+  "recommendations": [
+    {
+      "tableId": "T2",
+      "score": 92.0,
+      "reasons": [
+        "Sobib seltskonna suurusega (4 kohta)",
+        "Sobib valitud tsoonifiltriga (INDOOR)"
+      ]
+    }
+  ]
+}

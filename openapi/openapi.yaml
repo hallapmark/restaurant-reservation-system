@@ -1,0 +1,409 @@
+openapi: 3.0.3
+info:
+  title: Nutikas Restorani Reserveerimissüsteem API
+  version: 1.0.0
+  description: >
+    Spring Boot v1 API contract for table-selection and reservation flow with
+    floorplan-first UI and recommendation support.
+servers:
+  - url: /api/v1
+    description: API version 1 base path
+paths:
+  /layout:
+    get:
+      summary: Get floorplan layout
+      tags:
+        - layout
+      operationId: getLayout
+      responses:
+        "200":
+          description: Floorplan geometry and metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LayoutResponse"
+  /availability:
+    post:
+      summary: Get table availability for a time + party
+      tags:
+        - availability
+      operationId: getAvailability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilityRequest"
+      responses:
+        "200":
+          description: Availability state for all tables
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /recommendations:
+    post:
+      summary: Get ordered recommendations for available tables
+      tags:
+        - recommendations
+      operationId: getRecommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationRequest"
+      responses:
+        "200":
+          description: Ordered recommendations and top recommendation id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationsResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /reservations:
+    post:
+      summary: Confirm reservation on selected table
+      tags:
+        - reservations
+      operationId: createReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationRequest"
+      responses:
+        "201":
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "409":
+          description: Selected table already reserved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /reservations/{id}:
+    get:
+      summary: Get reservation details
+      tags:
+        - reservations
+      operationId: getReservation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Reservation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+        "404":
+          description: Reservation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Zone:
+      type: string
+      enum:
+        - INDOOR
+        - TERRACE
+        - PRIVATE
+    TableStatus:
+      type: string
+      enum:
+        - AVAILABLE
+        - RESERVED
+        - RECOMMENDED
+        - SELECTED
+        - UNAVAILABLE
+    AvailabilityStatus:
+      type: string
+      description: >
+        Availability endpoint returns only booking-availability states.
+      enum:
+        - AVAILABLE
+        - RESERVED
+        - UNAVAILABLE
+    Preference:
+      type: string
+      enum:
+        - PRIVACY
+        - WINDOW
+        - ACCESSIBLE
+        - NEAR_PLAY_AREA
+    ReservationStatus:
+      type: string
+      enum:
+        - CONFIRMED
+        - REJECTED
+        - CANCELLED
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+      required:
+        - status
+        - message
+
+    Point:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+      required:
+        - x
+        - y
+
+    ZoneSummary:
+      type: object
+      properties:
+        code:
+          $ref: "#/components/schemas/Zone"
+        label:
+          type: string
+        description:
+          type: string
+      required:
+        - code
+        - label
+
+    TableGeometry:
+      type: object
+      properties:
+        tableId:
+          type: string
+        label:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        zone:
+          $ref: "#/components/schemas/Zone"
+        center:
+          $ref: "#/components/schemas/Point"
+        width:
+          type: number
+        height:
+          type: number
+        rotationDegrees:
+          type: number
+      required:
+        - tableId
+        - label
+        - capacity
+        - zone
+        - center
+        - width
+        - height
+
+    LayoutResponse:
+      type: object
+      properties:
+        layoutId:
+          type: string
+        venueWidthMeters:
+          type: number
+        venueHeightMeters:
+          type: number
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneSummary"
+        tables:
+          type: array
+          items:
+            $ref: "#/components/schemas/TableGeometry"
+      required:
+        - layoutId
+        - venueWidthMeters
+        - venueHeightMeters
+        - zones
+        - tables
+
+    AvailabilityRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        partySize:
+          type: integer
+          minimum: 1
+        zone:
+          allOf:
+            - $ref: "#/components/schemas/Zone"
+          description: >
+            Optional filter. If provided, non-matching tables are marked UNAVAILABLE.
+      required:
+        - date
+        - time
+        - partySize
+
+    RecommendationRequest:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/AvailabilityRequest"
+        - type: object
+          properties:
+            preferences:
+              type: array
+              items:
+                $ref: "#/components/schemas/Preference"
+              uniqueItems: true
+              description: >
+                Used to calculate recommendation score and explanation reasons.
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        tableStatusById:
+          description: >
+            Map keyed by tableId (for all tables in the current layout), where values are
+            availability states for the requested date/time and party size.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AvailabilityStatus"
+        generatedAt:
+          type: string
+          format: date-time
+      required:
+        - tableStatusById
+        - generatedAt
+
+    Recommendation:
+      type: object
+      properties:
+        tableId:
+          type: string
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        reasons:
+          type: array
+          items:
+            type: string
+      required:
+        - tableId
+        - score
+        - reasons
+
+    RecommendationsResponse:
+      type: object
+      properties:
+        topRecommendationId:
+          type: string
+          nullable: true
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+      required:
+        - topRecommendationId
+        - recommendations
+
+    ReservationRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        partySize:
+          type: integer
+          minimum: 1
+        tableId:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        preferences:
+          type: array
+          items:
+            $ref: "#/components/schemas/Preference"
+      required:
+        - date
+        - time
+        - partySize
+        - tableId
+
+    ReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: string
+        tableId:
+          type: string
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        partySize:
+          type: integer
+          minimum: 1
+        status:
+          $ref: "#/components/schemas/ReservationStatus"
+        createdAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+      required:
+        - reservationId
+        - tableId
+        - date
+        - time
+        - partySize
+        - status
+        - createdAt

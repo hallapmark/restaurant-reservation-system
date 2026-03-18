@@ -1,0 +1,12 @@
+{
+  "date": "2026-03-21",
+  "time": "19:30",
+  "partySize": 4,
+  "tableId": "T2",
+  "customerName": "Marta V.",
+  "customerPhone": "+3725550123",
+  "customerEmail": "marta.v@example.com",
+  "preferences": [
+    "WINDOW"
+  ]
+}
