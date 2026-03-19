@@ -45,7 +45,7 @@ public class ReservationApiController {
                 "T2", AvailabilityStatus.UNAVAILABLE,
                 "T3", AvailabilityStatus.AVAILABLE
         );
-        return new AvailabilityResponse(new HashMap<>(), Instant.now());
+        return new AvailabilityResponse(statusMap, Instant.now());
     }
 
     @PostMapping("/recommendations")
