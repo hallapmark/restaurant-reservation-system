@@ -1,7 +1,12 @@
 package com.hallap.reserveerimissysteem.controller;
 
+import com.hallap.reserveerimissysteem.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+// This Controller has been written by me. - Mark
 
 @RestController
 @RequestMapping("/api/v1")
@@ -10,7 +15,22 @@ public class ReservationApiController {
 
     @GetMapping("/layout")
     public LayoutResponse getLayout() {
-        return new LayoutResponse();
+        // TODO: I'll need to write a check for table insertion into the db later.
+        // 1) I'll need the table to be within venue bounds (center + half width/height within venue dimensions)
+        // 2) AND each table needs clearance in relation to neighbors. Neighbor-wise 2 half-widths/heights + ~0.6m clearance
+        // maybe overthinking? But I think it would be sensible, otherwise we are inviting strange UI / overlap issues etc.
+        return new LayoutResponse(
+                "layout1", 20.0, 30.0,
+                List.of(
+                        new LayoutResponse.ZoneSummary(Zone.INDOOR, "Indoor", "Cozy Indoor area"),
+                        new LayoutResponse.ZoneSummary(Zone.TERRACE, "Terrace", "Heated Terrace with a View")
+                ),
+                List.of(
+                        new LayoutResponse.TableGeometry("T1", "Table 1", 4, Zone.INDOOR, new LayoutResponse.Point(4.0, 4.0), 1.2, 0.8, 0.0),
+                        new LayoutResponse.TableGeometry("T2", "Table 2", 2, Zone.INDOOR, new LayoutResponse.Point(6.0, 6.0), 0.8, 0.8, 0.0),
+                        new LayoutResponse.TableGeometry("T3", "Table 3", 3, Zone.INDOOR, new LayoutResponse.Point(8, 7.8), 1, 0.0, 0.0)
+                )
+        );
     }
 
     @PostMapping("/availability")
