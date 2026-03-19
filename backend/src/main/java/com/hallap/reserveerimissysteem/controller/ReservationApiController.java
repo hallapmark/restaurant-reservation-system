@@ -4,7 +4,10 @@ import com.hallap.reserveerimissysteem.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // This Controller has been written by me. - Mark
 
@@ -37,7 +40,12 @@ public class ReservationApiController {
     public AvailabilityResponse checkAvailability(
             @RequestBody AvailabilityRequest availabilityRequest
     ) {
-        return new AvailabilityResponse();
+        Map<String, AvailabilityStatus> statusMap = Map.of(
+                "T1", AvailabilityStatus.AVAILABLE,
+                "T2", AvailabilityStatus.UNAVAILABLE,
+                "T3", AvailabilityStatus.AVAILABLE
+        );
+        return new AvailabilityResponse(new HashMap<>(), Instant.now());
     }
 
     @PostMapping("/recommendations")
