@@ -52,7 +52,11 @@ public class ReservationApiController {
     public RecommendationsResponse getRecommendations(
             @RequestBody RecommendationsRequest recommendationsRequest
     ) {
-        return new RecommendationsResponse();
+        List<Recommendation> recommendations = List.of(new Recommendation(
+                "T1",
+                100,
+                List.of("Table is super good for you because...")));
+        return new RecommendationsResponse("T1", recommendations);
     }
 
     @PostMapping("/reservations")
