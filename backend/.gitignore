@@ -52,3 +52,10 @@ derby.log
 /target/
 
 node_modules
+
+#cache catch-all
+*.cache
+
+#firebase
+.firebaserc
+firebase.json
