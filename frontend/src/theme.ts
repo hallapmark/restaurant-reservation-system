@@ -64,9 +64,15 @@ export const restaurantTheme = createTheme({
       },
     },
     MuiPaper: {
+      // Remove default mui shadows
+      defaultProps: {
+        elevation: 0,
+      },
+      // Use a small Apple-style border instead
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+          border: '1px solid rgba(42, 30, 26, 0.12)',
         },
       },
     },
