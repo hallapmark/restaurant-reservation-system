@@ -1,7 +1,9 @@
 import { Box, Chip, Container, Paper, Stack, Typography } from '@mui/material'
 import LayoutView from '../components/LayoutView'
 
-// This page is AI-generated, verified and trimmed by me
+// AI helped generate the initial scaffolding for this page. I reviewed and trimmed it,
+// and adjusted the styling to avoid MUI's default shadow-heavy look.
+
 
 function Home() {
   return (
