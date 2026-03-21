@@ -128,7 +128,7 @@ class PhaseOneServiceTests {
                 PlanCode.TERRACE,
                 2,
                 Zone.TERRACE,
-                List.of("T5", "T6")
+                List.of("T8", "T6")
         );
 
         RecommendationsResponse response = recommendationService.getRecommendations(new RecommendationsRequest(
@@ -140,7 +140,7 @@ class PhaseOneServiceTests {
                 List.of()
         ));
 
-        assertThat(indexOf(response, "T5")).isLessThan(indexOf(response, "T6"));
+        assertThat(indexOf(response, "T8")).isLessThan(indexOf(response, "T6"));
     }
 
     @Test

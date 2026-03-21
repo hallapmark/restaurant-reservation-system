@@ -6,19 +6,19 @@
     {
       "code": "INDOOR",
       "label": "Saal",
-      "description": "Pohisaal koos privaatruumi ja mangualaga."
+      "description": "Põhisaal koos privaatruumi ja mangualaga."
     },
     {
       "code": "TERRACE",
       "label": "Terrass",
-      "description": "Vaiksem valiala soojuslampidega."
+      "description": "Vaiksem väliala soojuslampidega."
     }
   ],
   "zones": [
     {
       "code": "INDOOR",
       "label": "Sisesaal",
-      "description": "Restorani pohisaali lauad."
+      "description": "Restorani põhisaali lauad."
     },
     {
       "code": "PRIVATE",
@@ -60,7 +60,7 @@
       "featureId": "indoor-play-area",
       "plan": "INDOOR",
       "type": "PLAY_AREA",
-      "label": "Mangunurk",
+      "label": "Mängunurk",
       "center": {
         "x": 3.6,
         "y": 8.8
@@ -86,7 +86,7 @@
       "accessible": false,
       "nearWindow": true,
       "nearPlayArea": false,
-      "privacyScore": 0.35
+      "privacyScore": 0.2
     },
     {
       "tableId": "T2",
@@ -104,7 +104,7 @@
       "accessible": true,
       "nearWindow": false,
       "nearPlayArea": true,
-      "privacyScore": 0.25
+      "privacyScore": 0.2
     },
     {
       "tableId": "T3",
@@ -122,7 +122,7 @@
       "accessible": true,
       "nearWindow": true,
       "nearPlayArea": false,
-      "privacyScore": 0.5
+      "privacyScore": 0.2
     },
     {
       "tableId": "T4",
@@ -143,8 +143,8 @@
       "privacyScore": 0.95
     },
     {
-      "tableId": "T8",
-      "label": "Table 8",
+      "tableId": "T5",
+      "label": "Table 5",
       "capacity": 4,
       "plan": "INDOOR",
       "zone": "INDOOR",
@@ -159,24 +159,6 @@
       "nearWindow": false,
       "nearPlayArea": false,
       "privacyScore": 0.4
-    },
-    {
-      "tableId": "T5",
-      "label": "Table 5",
-      "capacity": 2,
-      "plan": "TERRACE",
-      "zone": "TERRACE",
-      "center": {
-        "x": 3.8,
-        "y": 2.8
-      },
-      "width": 1.0,
-      "height": 0.8,
-      "rotationDegrees": 0.0,
-      "accessible": false,
-      "nearWindow": false,
-      "nearPlayArea": false,
-      "privacyScore": 0.2
     },
     {
       "tableId": "T6",
@@ -194,7 +176,7 @@
       "accessible": true,
       "nearWindow": false,
       "nearPlayArea": false,
-      "privacyScore": 0.45
+      "privacyScore": 0.25
     },
     {
       "tableId": "T7",
@@ -212,7 +194,25 @@
       "accessible": true,
       "nearWindow": false,
       "nearPlayArea": false,
-      "privacyScore": 0.55
+      "privacyScore": 0.25
+    },
+    {
+      "tableId": "T8",
+      "label": "Table 8",
+      "capacity": 2,
+      "plan": "TERRACE",
+      "zone": "TERRACE",
+      "center": {
+        "x": 3.8,
+        "y": 2.8
+      },
+      "width": 1.0,
+      "height": 0.8,
+      "rotationDegrees": 0.0,
+      "accessible": false,
+      "nearWindow": false,
+      "nearPlayArea": false,
+      "privacyScore": 0.25
     },
     {
       "tableId": "T9",
@@ -230,7 +230,7 @@
       "accessible": false,
       "nearWindow": false,
       "nearPlayArea": false,
-      "privacyScore": 0.25
+      "privacyScore": 0.4
     },
     {
       "tableId": "T10",
@@ -248,7 +248,7 @@
       "accessible": true,
       "nearWindow": false,
       "nearPlayArea": false,
-      "privacyScore": 0.4
+      "privacyScore": 0.25
     },
     {
       "tableId": "T11",
@@ -266,7 +266,7 @@
       "accessible": true,
       "nearWindow": false,
       "nearPlayArea": false,
-      "privacyScore": 0.6
+      "privacyScore": 0.25
     }
   ]
 }
