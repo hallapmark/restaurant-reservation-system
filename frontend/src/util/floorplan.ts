@@ -11,21 +11,20 @@ export interface LayoutBounds {
 
 export function getTableDisplayState(args: {
   availabilityStatus: AvailabilityStatus
-  selectedTableId: string | null
-  tableId: string
-  recommendedTableIds: Set<string>
+  isSelected: boolean
+  isRecommended: boolean
 }): TableDisplayState {
-  const { availabilityStatus, selectedTableId, tableId, recommendedTableIds } = args
+  const { availabilityStatus, isSelected, isRecommended } = args
 
   if (availabilityStatus === 'RESERVED') {
     return 'RESERVED'
   }
 
-  if (selectedTableId === tableId) {
+  if (isSelected) {
     return 'SELECTED'
   }
 
-  if (recommendedTableIds.has(tableId) && availabilityStatus === 'AVAILABLE') {
+  if (isRecommended && availabilityStatus === 'AVAILABLE') {
     return 'RECOMMENDED'
   }
 
@@ -54,4 +53,44 @@ export function getLayoutBounds(layout: LayoutResponse | null): LayoutBounds {
   }
 
   return { minX, minY, maxX, maxY }
+}
+
+export interface TableGridPlacement {
+  colStart: number
+  colSpan: number
+  rowStart: number
+  rowSpan: number
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export function getTableGridPlacement(args: {
+  table: LayoutResponse['tables'][number]
+  bounds: LayoutBounds
+  venueWidthMeters: number
+  venueHeightMeters: number
+  gridColumns: number
+  gridRows: number
+}): TableGridPlacement {
+  const { table, bounds, venueWidthMeters, venueHeightMeters, gridColumns, gridRows } = args
+  const xRange = Math.max(bounds.maxX - bounds.minX, 1)
+  const yRange = Math.max(bounds.maxY - bounds.minY, 1)
+  const normalizedX = (table.center.x - bounds.minX) / xRange
+  const normalizedY = (table.center.y - bounds.minY) / yRange
+  const colSpan = clamp(
+    Math.ceil((table.width / Math.max(venueWidthMeters, 1)) * gridColumns * 3),
+    2,
+    4,
+  )
+  const rowSpan = clamp(
+    Math.ceil((table.height / Math.max(venueHeightMeters, 1)) * gridRows * 3),
+    1,
+    2,
+  )
+  const colStart = Math.round(normalizedX * Math.max(gridColumns - colSpan, 0)) + 1
+  const rowStart = Math.round(normalizedY * Math.max(gridRows - rowSpan, 0)) + 1
+
+  return { colStart, colSpan, rowStart, rowSpan }
 }

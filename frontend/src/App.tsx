@@ -1,3 +1,4 @@
+// This setup is authored by me and follows my preferred React patterns
 
 import './App.css'
 import CssBaseline from '@mui/material/CssBaseline'

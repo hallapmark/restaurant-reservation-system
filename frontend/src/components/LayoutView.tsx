@@ -7,7 +7,6 @@ import {
   Paper,
   Stack,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
@@ -16,6 +15,7 @@ import type {
   LayoutResponse,
   ZoneCode,
 } from '../models/layout'
+import FloorplanTableTile from './FloorplanTableTile'
 import {
   fetchAvailability,
   fetchLayout,
@@ -23,81 +23,10 @@ import {
 } from '../services/reservationApi'
 import {
   getLayoutBounds,
-  getTableDisplayState,
-  type TableDisplayState,
 } from '../util/floorplan'
 
 const GRID_COLUMNS = 12
 const GRID_ROWS = 8
-
-function getStateStyle(displayState: TableDisplayState) {
-  if (displayState === 'RESERVED') {
-    return {
-      backgroundColor: 'grey.300',
-      borderColor: 'grey.500',
-      borderStyle: 'solid',
-      color: 'text.secondary',
-    }
-  }
-
-  if (displayState === 'SELECTED') {
-    return {
-      backgroundColor: 'primary.main',
-      borderColor: 'primary.dark',
-      borderStyle: 'solid',
-      color: 'primary.contrastText',
-    }
-  }
-
-  if (displayState === 'RECOMMENDED') {
-    return {
-      backgroundColor: 'warning.main',
-      borderColor: 'warning.dark',
-      borderStyle: 'solid',
-      color: 'common.white',
-    }
-  }
-
-  if (displayState === 'AVAILABLE') {
-    return {
-      backgroundColor: 'success.light',
-      borderColor: 'success.main',
-      borderStyle: 'solid',
-      color: 'text.primary',
-    }
-  }
-
-  return {
-    backgroundColor: 'grey.50',
-    borderColor: 'grey.300',
-    borderStyle: 'dashed',
-    color: 'text.secondary',
-  }
-}
-
-function getStateLabel(displayState: TableDisplayState, hasAvailabilityData: boolean) {
-  if (!hasAvailabilityData) {
-    return 'Saadavuse infot ei ole. Saaliplaan on ajutiselt ainult vaatamiseks.'
-  }
-
-  if (displayState === 'RESERVED') {
-    return 'Broneeritud'
-  }
-
-  if (displayState === 'UNAVAILABLE') {
-    return 'Ei sobi valitud tingimustega'
-  }
-
-  if (displayState === 'RECOMMENDED') {
-    return 'Soovitatud laud'
-  }
-
-  if (displayState === 'SELECTED') {
-    return 'Sinu valitud laud'
-  }
-
-  return 'Vaba laud'
-}
 
 export default function LayoutView() {
   const [layout, setLayout] = useState<LayoutResponse | null>(null)
@@ -229,6 +158,10 @@ export default function LayoutView() {
   }, [selectedTableId, tableStatusById])
 
   const { minX, minY, maxX, maxY } = useMemo(() => getLayoutBounds(layout), [layout])
+  const zoneLabelsByCode = useMemo(
+    () => Object.fromEntries((layout?.zones ?? []).map((zone) => [zone.code, zone.label])),
+    [layout],
+  )
 
   return (
     <Stack spacing={3}>
@@ -310,81 +243,25 @@ export default function LayoutView() {
           >
             {(layout?.tables ?? []).map((table) => {
               const availabilityStatus = tableStatusById[table.tableId] ?? 'UNAVAILABLE'
-              const isSelectable = hasAvailabilityData && availabilityStatus === 'AVAILABLE'
-              const displayState = getTableDisplayState({
-                availabilityStatus,
-                selectedTableId,
-                tableId: table.tableId,
-                recommendedTableIds,
-              })
-              const style = hasAvailabilityData
-                ? getStateStyle(displayState)
-                : {
-                    backgroundColor: 'grey.50',
-                    borderColor: 'grey.300',
-                    borderStyle: 'dashed',
-                    color: 'text.secondary',
-                  }
-              const stateLabel = getStateLabel(displayState, hasAvailabilityData)
-
-              const colIndex =
-                Math.round(((table.center.x - minX) / Math.max(maxX - minX, 1)) * (GRID_COLUMNS - 1)) +
-                1
-              const rowIndex =
-                Math.round(((table.center.y - minY) / Math.max(maxY - minY, 1)) * (GRID_ROWS - 1)) + 1
-
               return (
-                <Box
+                <FloorplanTableTile
                   key={table.tableId}
-                  sx={{
-                    gridColumn: `${colIndex} / span 1`,
-                    gridRow: `${rowIndex} / span 1`,
-                    minWidth: 0,
+                  table={table}
+                  availabilityStatus={availabilityStatus}
+                  bounds={{ minX, minY, maxX, maxY }}
+                  venueWidthMeters={layout?.venueWidthMeters ?? 1}
+                  venueHeightMeters={layout?.venueHeightMeters ?? 1}
+                  gridColumns={GRID_COLUMNS}
+                  gridRows={GRID_ROWS}
+                  hasAvailabilityData={hasAvailabilityData}
+                  isSelected={selectedTableId === table.tableId}
+                  isRecommended={recommendedTableIds.has(table.tableId)}
+                  zoneLabel={zoneLabelsByCode[table.zone] ?? table.zone}
+                  onSelect={(tableId) => {
+                    setSelectionNotice(null)
+                    setSelectedTableId(tableId)
                   }}
-                >
-                  <Tooltip title={stateLabel} arrow placement="top">
-                    <Box component="span" sx={{ display: 'block' }}>
-                      <Box
-                        component="button"
-                        type="button"
-                        disabled={!isSelectable}
-                        aria-pressed={selectedTableId === table.tableId}
-                        aria-label={`${table.label}. ${stateLabel}.`}
-                        onClick={() => {
-                          setSelectionNotice(null)
-                          setSelectedTableId(table.tableId)
-                        }}
-                        sx={{
-                          appearance: 'none',
-                          background: 'none',
-                          width: '100%',
-                          p: 1.2,
-                          borderRadius: 2,
-                          borderWidth: 2,
-                          cursor: isSelectable ? 'pointer' : 'not-allowed',
-                          font: 'inherit',
-                          textAlign: 'left',
-                          userSelect: 'none',
-                          transition: 'transform 120ms ease, box-shadow 120ms ease',
-                          '&:hover': {
-                            transform: isSelectable ? 'translateY(-1px)' : 'none',
-                            boxShadow: isSelectable ? 2 : 'none',
-                          },
-                          '&:disabled': { opacity: 1 },
-                          ...style,
-                        }}
-                      >
-                        <Stack spacing={0.2}>
-                          <Typography variant="subtitle2" sx={{ lineHeight: 1.15 }}>
-                            {table.label}
-                          </Typography>
-                          <Typography variant="caption">{table.capacity} kohta</Typography>
-                          <Typography variant="caption">{table.zone}</Typography>
-                        </Stack>
-                      </Box>
-                    </Box>
-                  </Tooltip>
-                </Box>
+                />
               )
             })}
           </Box>

@@ -3,7 +3,7 @@
 ## Home.tsx
 
 - AI aitas luua lehe algse MUI-põhise struktuuri.
-- Mina vaatasin struktuuri üle, lühendasin seda ja kohandasin visuaali, et tulemus ei jääks liiga MUI vaikekujunduse nägu.
+- Mina vaatasin struktuuri üle, lühendasin seda ja kohandasin visuaali, et tulemus ei jääks liiga MUI vaikekujunduse moodi.
 - Mina otsustasin hoida `Home`-i kui põhilehe, kuhu on seotud `LayoutView`.
 
 ## ThemeDemo.tsx
