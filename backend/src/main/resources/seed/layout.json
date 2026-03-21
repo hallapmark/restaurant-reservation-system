@@ -147,8 +147,8 @@
       "height": 0.9,
       "rotationDegrees": 0.0,
       "accessible": true,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.25
     },
     {
@@ -162,8 +162,8 @@
       "height": 1.0,
       "rotationDegrees": 0.0,
       "accessible": true,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.25
     },
     {
@@ -177,8 +177,8 @@
       "height": 0.8,
       "rotationDegrees": 0.0,
       "accessible": false,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.25
     },
     {
@@ -192,8 +192,8 @@
       "height": 0.8,
       "rotationDegrees": 0.0,
       "accessible": false,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.4
     },
     {
@@ -207,8 +207,8 @@
       "height": 0.9,
       "rotationDegrees": 0.0,
       "accessible": true,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.25
     },
     {
@@ -222,8 +222,8 @@
       "height": 1.0,
       "rotationDegrees": 0.0,
       "accessible": true,
-      "nearWindow": false,
-      "nearPlayArea": false,
+      "nearWindow": null,
+      "nearPlayArea": null,
       "privacyScore": 0.25
     }
   ]

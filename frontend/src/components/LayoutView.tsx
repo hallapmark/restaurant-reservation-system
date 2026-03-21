@@ -47,6 +47,14 @@ function getDefaultPlan(layout: LayoutResponse) {
   return layout.plans.find((plan) => plan.code === 'INDOOR')?.code ?? layout.plans[0]?.code ?? null
 }
 
+function getAllowedPreferencesForPlan(plan: PlanCode | null): RecommendationPreference[] {
+  if (plan === 'TERRACE') {
+    return ['PRIVACY']
+  }
+
+  return ['PRIVACY', 'WINDOW', 'NEAR_PLAY_AREA']
+}
+
 export default function LayoutView() {
   const [layout, setLayout] = useState<LayoutResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -64,6 +72,22 @@ export default function LayoutView() {
   const [topRecommendedTableId, setTopRecommendedTableId] = useState<string | null>(null)
   const [topRecommendation, setTopRecommendation] = useState<Recommendation | null>(null)
   const [selectionNotice, setSelectionNotice] = useState<string | null>(null)
+  const allowedPreferences = useMemo(
+    () => getAllowedPreferencesForPlan(activePlan),
+    [activePlan],
+  )
+  const visiblePreferenceOptions = useMemo(
+    () =>
+      RECOMMENDATION_PREFERENCE_OPTIONS.filter((option) =>
+        allowedPreferences.includes(option.value),
+      ),
+    [allowedPreferences],
+  )
+  const activeRecommendationPreferences = useMemo(
+    () =>
+      selectedPreferences.filter((preference) => allowedPreferences.includes(preference)),
+    [selectedPreferences, allowedPreferences],
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -137,7 +161,7 @@ export default function LayoutView() {
 
       const [availabilityResult, recommendationsResult] = await Promise.allSettled([
         fetchAvailability(request),
-        fetchRecommendations({ ...request, preferences: selectedPreferences }),
+        fetchRecommendations({ ...request, preferences: activeRecommendationPreferences }),
       ])
 
       if (cancelled) {
@@ -188,7 +212,16 @@ export default function LayoutView() {
     return () => {
       cancelled = true
     }
-  }, [layout, activePlan, date, time, partySize, accessibleRequired, selectedPreferences])
+  }, [
+    layout,
+    activePlan,
+    date,
+    time,
+    partySize,
+    accessibleRequired,
+    selectedPreferences,
+    activeRecommendationPreferences,
+  ])
 
   const planTables = useMemo(
     () => layout?.tables.filter((table) => table.plan === activePlan) ?? [],
@@ -354,7 +387,7 @@ export default function LayoutView() {
           <Stack spacing={1}>
             <Typography variant="subtitle2">Eelistused</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {RECOMMENDATION_PREFERENCE_OPTIONS.map((option) => {
+              {visiblePreferenceOptions.map((option) => {
                 const isSelected = selectedPreferences.includes(option.value)
                 return (
                   <Chip
@@ -368,6 +401,11 @@ export default function LayoutView() {
                 )
               })}
             </Stack>
+            {activePlan === 'TERRACE' ? (
+              <Typography variant="body2" color="text.secondary">
+                Terrassil arvestatakse soovituste puhul ainult privaatsuse eelistust.
+              </Typography>
+            ) : null}
           </Stack>
         </Stack>
       </Paper>

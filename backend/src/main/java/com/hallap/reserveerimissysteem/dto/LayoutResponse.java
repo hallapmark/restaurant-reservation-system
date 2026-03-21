@@ -54,8 +54,8 @@ public record LayoutResponse(
             double height,
             double rotationDegrees,
             boolean accessible,
-            boolean nearWindow,
-            boolean nearPlayArea,
+            Boolean nearWindow,
+            Boolean nearPlayArea,
             double privacyScore
     ) {
     }

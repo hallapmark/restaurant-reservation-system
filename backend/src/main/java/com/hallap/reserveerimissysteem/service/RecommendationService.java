@@ -89,13 +89,13 @@ public class RecommendationService {
                     : "Pakub arvestatavat privaatsust.");
         }
 
-        if (preferences.contains(RecommendationPreference.WINDOW) && table.nearWindow()) {
+        if (preferences.contains(RecommendationPreference.WINDOW) && Boolean.TRUE.equals(table.nearWindow())) {
             score += 10.0;
             matchedPreferenceCount++;
             reasons.add("Asub akna lähedal.");
         }
 
-        if (preferences.contains(RecommendationPreference.NEAR_PLAY_AREA) && table.nearPlayArea()) {
+        if (preferences.contains(RecommendationPreference.NEAR_PLAY_AREA) && Boolean.TRUE.equals(table.nearPlayArea())) {
             score += 10.0;
             matchedPreferenceCount++;
             reasons.add("Laste mängunurk on lähedal.");

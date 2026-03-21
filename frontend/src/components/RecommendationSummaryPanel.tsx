@@ -51,7 +51,6 @@ export default function RecommendationSummaryPanel({
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           {topRecommendationTable.label}
         </Typography>
-        <Chip size="small" color="warning" label={`Skoor ${topRecommendation.score}`} />
         {zoneLabel ? <Chip size="small" variant="outlined" label={zoneLabel} /> : null}
       </Stack>
 

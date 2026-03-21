@@ -46,8 +46,8 @@ export interface LayoutTable {
   height: number
   rotationDegrees: number
   accessible: boolean
-  nearWindow: boolean
-  nearPlayArea: boolean
+  nearWindow: boolean | null
+  nearPlayArea: boolean | null
   privacyScore: number
 }
 

@@ -292,8 +292,10 @@ components:
           type: boolean
         nearWindow:
           type: boolean
+          nullable: true
         nearPlayArea:
           type: boolean
+          nullable: true
         privacyScore:
           type: number
           minimum: 0
