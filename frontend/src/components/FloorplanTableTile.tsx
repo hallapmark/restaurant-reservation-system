@@ -1,9 +1,11 @@
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
 import {
   Box,
   Stack,
   Tooltip,
   Typography,
 } from '@mui/material'
+import type { ReactNode } from 'react'
 import type { AvailabilityStatus, LayoutTable } from '../models/layout'
 import {
   getTableDisplayState,
@@ -81,6 +83,24 @@ function getStateLabel(displayState: TableDisplayState, hasAvailabilityData: boo
   return 'Vaba laud'
 }
 
+function getTooltipTitle(args: {
+  stateLabel: string
+  zoneLabel: string
+}): ReactNode {
+  const { stateLabel, zoneLabel } = args
+
+  return (
+    <Stack spacing={0.2}>
+      <Typography variant="caption" sx={{ fontWeight: 700 }}>
+        {stateLabel}
+      </Typography>
+      <Typography variant="caption">
+        Tsoon: {zoneLabel}
+      </Typography>
+    </Stack>
+  )
+}
+
 interface FloorplanTableTileProps {
   table: LayoutTable
   availabilityStatus: AvailabilityStatus
@@ -111,6 +131,7 @@ export default function FloorplanTableTile({
   onSelect,
 }: FloorplanTableTileProps) {
   const isSelectable = hasAvailabilityData && availabilityStatus === 'AVAILABLE'
+  const compactLabel = table.tableId
   const displayState = getTableDisplayState({
     availabilityStatus,
     isSelected,
@@ -125,6 +146,7 @@ export default function FloorplanTableTile({
         color: 'text.secondary',
       }
   const stateLabel = getStateLabel(displayState, hasAvailabilityData)
+  const tooltipTitle = getTooltipTitle({ stateLabel, zoneLabel })
   const { colStart, colSpan, rowStart, rowSpan } = getTableGridPlacement({
     table,
     bounds,
@@ -142,14 +164,14 @@ export default function FloorplanTableTile({
         minWidth: 0,
       }}
     >
-      <Tooltip title={stateLabel} arrow placement="top">
+      <Tooltip title={tooltipTitle} arrow placement="top">
         <Box component="span" sx={{ display: 'block' }}>
           <Box
             component="button"
             type="button"
             disabled={!isSelectable}
             aria-pressed={isSelected}
-            aria-label={`${table.label}. ${stateLabel}.`}
+            aria-label={`${table.label}. ${stateLabel}. Tsoon: ${zoneLabel}.`}
             onClick={() => onSelect(table.tableId)}
             sx={{
               appearance: 'none',
@@ -174,14 +196,43 @@ export default function FloorplanTableTile({
             }}
           >
             <Stack spacing={0.35} sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap sx={{ lineHeight: 1.15 }}>
+              <Typography
+                variant="subtitle2"
+                noWrap
+                sx={{ lineHeight: 1.15, display: { xs: 'none', sm: 'block' } }}
+              >
                 {table.label}
               </Typography>
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ minWidth: 0 }}>
-                <Typography variant="caption" sx={{ whiteSpace: 'nowrap' }}>
+              <Typography
+                variant="subtitle2"
+                noWrap
+                sx={{ lineHeight: 1.15, display: { xs: 'block', sm: 'none' } }}
+              >
+                {compactLabel}
+              </Typography>
+              <Stack spacing={0.2} sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}
+                >
                   {table.capacity} kohta
                 </Typography>
-                <Typography variant="caption" noWrap sx={{ minWidth: 0 }}>
+                <Stack
+                  direction="row"
+                  spacing={0.25}
+                  alignItems="center"
+                  sx={{ display: { xs: 'inline-flex', sm: 'none' }, minWidth: 0 }}
+                >
+                  <PersonOutlineIcon sx={{ fontSize: 14 }} />
+                  <Typography variant="caption" sx={{ whiteSpace: 'nowrap' }}>
+                    {table.capacity}
+                  </Typography>
+                </Stack>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{ minWidth: 0, display: { xs: 'none', sm: 'block' } }}
+                >
                   {zoneLabel}
                 </Typography>
               </Stack>
