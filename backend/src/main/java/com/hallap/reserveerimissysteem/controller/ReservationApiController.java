@@ -30,7 +30,8 @@ public class ReservationApiController {
                 List.of(
                         new LayoutResponse.TableGeometry("T1", "Table 1", 4, Zone.INDOOR, new LayoutResponse.Point(4.0, 4.0), 1.2, 0.8, 0.0),
                         new LayoutResponse.TableGeometry("T2", "Table 2", 2, Zone.INDOOR, new LayoutResponse.Point(6.0, 6.0), 0.8, 0.8, 0.0),
-                        new LayoutResponse.TableGeometry("T3", "Table 3", 3, Zone.INDOOR, new LayoutResponse.Point(8.0, 7.8), 1.0, 0.8, 0.0)
+                        new LayoutResponse.TableGeometry("T3", "Table 3", 3, Zone.INDOOR, new LayoutResponse.Point(8.0, 7.8), 1.0, 0.8, 0.0),
+                        new LayoutResponse.TableGeometry("T4", "Table 4", 6, Zone.TERRACE, new LayoutResponse.Point(11.2, 5.8), 1.8, 1.0, 0.0)
                 )
         );
     }
@@ -42,7 +43,8 @@ public class ReservationApiController {
         Map<String, AvailabilityStatus> statusMap = Map.of(
                 "T1", AvailabilityStatus.AVAILABLE,
                 "T2", AvailabilityStatus.UNAVAILABLE,
-                "T3", AvailabilityStatus.AVAILABLE
+                "T3", AvailabilityStatus.AVAILABLE,
+                "T4", AvailabilityStatus.RESERVED
         );
         return new AvailabilityResponse(statusMap, Instant.now());
     }

@@ -7,6 +7,7 @@ import {
   Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useEffect, useMemo, useState } from 'react'
@@ -32,25 +33,28 @@ const GRID_ROWS = 8
 function getStateStyle(displayState: TableDisplayState) {
   if (displayState === 'RESERVED') {
     return {
-      backgroundColor: 'action.disabledBackground',
-      borderColor: 'text.disabled',
-      color: 'text.disabled',
+      backgroundColor: 'grey.300',
+      borderColor: 'grey.500',
+      borderStyle: 'solid',
+      color: 'text.secondary',
     }
   }
 
   if (displayState === 'SELECTED') {
     return {
-      backgroundColor: 'secondary.dark',
-      borderColor: 'secondary.dark',
-      color: 'secondary.contrastText',
+      backgroundColor: 'primary.main',
+      borderColor: 'primary.dark',
+      borderStyle: 'solid',
+      color: 'primary.contrastText',
     }
   }
 
   if (displayState === 'RECOMMENDED') {
     return {
-      backgroundColor: 'primary.main',
-      borderColor: 'primary.dark',
-      color: 'primary.contrastText',
+      backgroundColor: 'warning.main',
+      borderColor: 'warning.dark',
+      borderStyle: 'solid',
+      color: 'common.white',
     }
   }
 
@@ -58,15 +62,41 @@ function getStateStyle(displayState: TableDisplayState) {
     return {
       backgroundColor: 'success.light',
       borderColor: 'success.main',
+      borderStyle: 'solid',
       color: 'text.primary',
     }
   }
 
   return {
-    backgroundColor: 'warning.light',
-    borderColor: 'warning.main',
-    color: 'text.primary',
+    backgroundColor: 'grey.50',
+    borderColor: 'grey.300',
+    borderStyle: 'dashed',
+    color: 'text.secondary',
   }
+}
+
+function getStateLabel(displayState: TableDisplayState, hasAvailabilityData: boolean) {
+  if (!hasAvailabilityData) {
+    return 'Saadavuse infot ei ole. Saaliplaan on ajutiselt ainult vaatamiseks.'
+  }
+
+  if (displayState === 'RESERVED') {
+    return 'Broneeritud'
+  }
+
+  if (displayState === 'UNAVAILABLE') {
+    return 'Ei sobi valitud tingimustega'
+  }
+
+  if (displayState === 'RECOMMENDED') {
+    return 'Soovitatud laud'
+  }
+
+  if (displayState === 'SELECTED') {
+    return 'Sinu valitud laud'
+  }
+
+  return 'Vaba laud'
 }
 
 export default function LayoutView() {
@@ -290,10 +320,12 @@ export default function LayoutView() {
               const style = hasAvailabilityData
                 ? getStateStyle(displayState)
                 : {
-                    backgroundColor: 'action.disabledBackground',
-                    borderColor: 'text.disabled',
-                    color: 'text.disabled',
+                    backgroundColor: 'grey.50',
+                    borderColor: 'grey.300',
+                    borderStyle: 'dashed',
+                    color: 'text.secondary',
                   }
+              const stateLabel = getStateLabel(displayState, hasAvailabilityData)
 
               const colIndex =
                 Math.round(((table.center.x - minX) / Math.max(maxX - minX, 1)) * (GRID_COLUMNS - 1)) +
@@ -304,53 +336,65 @@ export default function LayoutView() {
               return (
                 <Box
                   key={table.tableId}
-                  component="button"
-                  type="button"
-                  disabled={!isSelectable}
-                  aria-pressed={selectedTableId === table.tableId}
-                  onClick={() => {
-                    setSelectionNotice(null)
-                    setSelectedTableId(table.tableId)
-                  }}
                   sx={{
                     gridColumn: `${colIndex} / span 1`,
                     gridRow: `${rowIndex} / span 1`,
-                    appearance: 'none',
-                    background: 'none',
-                    p: 1.2,
-                    borderRadius: 2,
-                    border: '2px solid',
-                    cursor: isSelectable ? 'pointer' : 'not-allowed',
-                    font: 'inherit',
-                    textAlign: 'left',
-                    userSelect: 'none',
-                    transition: 'transform 120ms ease, box-shadow 120ms ease',
-                    '&:hover': {
-                      transform: isSelectable ? 'translateY(-1px)' : 'none',
-                      boxShadow: isSelectable ? 2 : 'none',
-                    },
-                    '&:disabled': { opacity: 1 },
-                    ...style,
+                    minWidth: 0,
                   }}
                 >
-                  <Stack spacing={0.2}>
-                    <Typography variant="subtitle2" sx={{ lineHeight: 1.15 }}>
-                      {table.label}
-                    </Typography>
-                    <Typography variant="caption">{table.capacity} kohta</Typography>
-                    <Typography variant="caption">{table.zone}</Typography>
-                  </Stack>
+                  <Tooltip title={stateLabel} arrow placement="top">
+                    <Box component="span" sx={{ display: 'block' }}>
+                      <Box
+                        component="button"
+                        type="button"
+                        disabled={!isSelectable}
+                        aria-pressed={selectedTableId === table.tableId}
+                        aria-label={`${table.label}. ${stateLabel}.`}
+                        onClick={() => {
+                          setSelectionNotice(null)
+                          setSelectedTableId(table.tableId)
+                        }}
+                        sx={{
+                          appearance: 'none',
+                          background: 'none',
+                          width: '100%',
+                          p: 1.2,
+                          borderRadius: 2,
+                          borderWidth: 2,
+                          cursor: isSelectable ? 'pointer' : 'not-allowed',
+                          font: 'inherit',
+                          textAlign: 'left',
+                          userSelect: 'none',
+                          transition: 'transform 120ms ease, box-shadow 120ms ease',
+                          '&:hover': {
+                            transform: isSelectable ? 'translateY(-1px)' : 'none',
+                            boxShadow: isSelectable ? 2 : 'none',
+                          },
+                          '&:disabled': { opacity: 1 },
+                          ...style,
+                        }}
+                      >
+                        <Stack spacing={0.2}>
+                          <Typography variant="subtitle2" sx={{ lineHeight: 1.15 }}>
+                            {table.label}
+                          </Typography>
+                          <Typography variant="caption">{table.capacity} kohta</Typography>
+                          <Typography variant="caption">{table.zone}</Typography>
+                        </Stack>
+                      </Box>
+                    </Box>
+                  </Tooltip>
                 </Box>
               )
             })}
           </Box>
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Chip size="small" label="Broneeritud" sx={{ backgroundColor: 'action.disabledBackground' }} />
-            <Chip size="small" label="Valitud" color="secondary" />
-            <Chip size="small" label="Soovitatud" color="primary" />
+            <Chip size="small" label="Valitud" color="primary" />
+            <Chip size="small" label="Soovitatud" color="warning" />
             <Chip size="small" label="Vaba" sx={{ backgroundColor: 'success.light' }} />
-            <Chip size="small" label="Ei sobi" sx={{ backgroundColor: 'warning.light' }} />
+            <Chip size="small" label="Broneeritud" sx={{ backgroundColor: 'grey.300' }} />
+            <Chip size="small" label="Ei sobi" sx={{ backgroundColor: 'grey.100' }} />
           </Stack>
 
           {selectionNotice ? (

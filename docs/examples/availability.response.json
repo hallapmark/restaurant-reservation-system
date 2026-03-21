@@ -1,10 +1,9 @@
 {
   "tableStatusById": {
-    "T1": "RESERVED",
-    "T2": "AVAILABLE",
+    "T1": "AVAILABLE",
+    "T2": "UNAVAILABLE",
     "T3": "AVAILABLE",
-    "T4": "UNAVAILABLE",
-    "T5": "RESERVED"
+    "T4": "RESERVED"
   },
   "generatedAt": "2026-03-17T17:04:12Z"
 }

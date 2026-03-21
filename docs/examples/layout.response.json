@@ -1,88 +1,70 @@
 {
-  "layoutId": "demo-floor-01",
-  "venueWidthMeters": 22.4,
-  "venueHeightMeters": 13.8,
+  "layoutId": "layout1",
+  "venueWidthMeters": 20.0,
+  "venueHeightMeters": 30.0,
   "zones": [
     {
       "code": "INDOOR",
-      "label": "Saal",
-      "description": "Peasaal, vaiksem ala"
+      "label": "Indoor",
+      "description": "Cozy Indoor area"
     },
     {
       "code": "TERRACE",
-      "label": "Terrass",
-      "description": "Õueala"
-    },
-    {
-      "code": "PRIVATE",
-      "label": "Era ruum",
-      "description": "Poolprivaatne ruum"
+      "label": "Terrace",
+      "description": "Heated Terrace with a View"
     }
   ],
   "tables": [
     {
       "tableId": "T1",
-      "label": "T1",
-      "capacity": 2,
+      "label": "Table 1",
+      "capacity": 4,
       "zone": "INDOOR",
       "center": {
-        "x": 4.2,
-        "y": 3.0
+        "x": 4.0,
+        "y": 4.0
       },
-      "width": 1.3,
-      "height": 1.2,
+      "width": 1.2,
+      "height": 0.8,
       "rotationDegrees": 0
     },
     {
       "tableId": "T2",
-      "label": "T2",
-      "capacity": 4,
+      "label": "Table 2",
+      "capacity": 2,
       "zone": "INDOOR",
       "center": {
-        "x": 8.7,
-        "y": 3.2
+        "x": 6.0,
+        "y": 6.0
       },
-      "width": 1.6,
-      "height": 1.2,
+      "width": 0.8,
+      "height": 0.8,
       "rotationDegrees": 0
     },
     {
       "tableId": "T3",
-      "label": "T3",
-      "capacity": 6,
-      "zone": "TERRACE",
+      "label": "Table 3",
+      "capacity": 3,
+      "zone": "INDOOR",
       "center": {
-        "x": 14.1,
-        "y": 4.6
+        "x": 8.0,
+        "y": 7.8
       },
-      "width": 2.0,
-      "height": 1.5,
-      "rotationDegrees": 15
+      "width": 1.0,
+      "height": 0.8,
+      "rotationDegrees": 0
     },
     {
       "tableId": "T4",
-      "label": "T4",
-      "capacity": 4,
+      "label": "Table 4",
+      "capacity": 6,
       "zone": "TERRACE",
       "center": {
-               "x": 17.9,
-        "y": 5.5
+        "x": 11.2,
+        "y": 5.8
       },
-      "width": 1.6,
-      "height": 1.3,
-      "rotationDegrees": -10
-    },
-    {
-      "tableId": "T5",
-      "label": "P1",
-      "capacity": 8,
-      "zone": "PRIVATE",
-      "center": {
-        "x": 11.5,
-        "y": 10.4
-      },
-      "width": 2.4,
-      "height": 1.7,
+      "width": 1.8,
+      "height": 1.0,
       "rotationDegrees": 0
     }
   ]

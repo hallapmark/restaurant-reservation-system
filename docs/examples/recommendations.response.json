@@ -1,12 +1,11 @@
 {
-  "topRecommendationId": "T2",
+  "topRecommendationId": "T1",
   "recommendations": [
     {
-      "tableId": "T2",
-      "score": 92.0,
+      "tableId": "T1",
+      "score": 100.0,
       "reasons": [
-        "Sobib seltskonna suurusega (4 kohta)",
-        "Sobib valitud tsoonifiltriga (INDOOR)"
+        "See on Sulle hea laud, sest..."
       ]
     }
   ]
