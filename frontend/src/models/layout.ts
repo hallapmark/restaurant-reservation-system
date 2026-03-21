@@ -1,4 +1,8 @@
+export type PlanCode = 'INDOOR' | 'TERRACE'
+
 export type ZoneCode = 'INDOOR' | 'TERRACE' | 'PRIVATE'
+
+export type FeatureType = 'PRIVATE_ROOM' | 'PLAY_AREA' | 'WINDOW_BAND'
 
 export type AvailabilityStatus = 'AVAILABLE' | 'RESERVED' | 'UNAVAILABLE'
 
@@ -9,28 +13,51 @@ export interface LayoutPoint {
   y: number
 }
 
+export interface LayoutPlan {
+  code: PlanCode
+  label: string
+  description: string
+}
+
 export interface LayoutZone {
   code: ZoneCode
   label: string
   description: string
 }
 
+export interface LayoutFeature {
+  featureId: string
+  plan: PlanCode
+  type: FeatureType
+  label: string
+  center: LayoutPoint
+  width: number
+  height: number
+}
+
 export interface LayoutTable {
   tableId: string
   label: string
   capacity: number
+  plan: PlanCode
   zone: ZoneCode
   center: LayoutPoint
   width: number
   height: number
   rotationDegrees: number
+  accessible: boolean
+  nearWindow: boolean
+  nearPlayArea: boolean
+  privacyScore: number
 }
 
 export interface LayoutResponse {
   layoutId: string
   venueWidthMeters: number
   venueHeightMeters: number
+  plans: LayoutPlan[]
   zones: LayoutZone[]
+  features: LayoutFeature[]
   tables: LayoutTable[]
 }
 
@@ -38,6 +65,7 @@ export interface AvailabilityRequest {
   date: string
   time: string
   partySize: number
+  plan: PlanCode
   zone?: ZoneCode | null
 }
 
@@ -56,6 +84,7 @@ export interface RecommendationsRequest {
   date: string
   time: string
   partySize: number
+  plan: PlanCode
   zone?: ZoneCode | null
   preferences: Preference[]
 }

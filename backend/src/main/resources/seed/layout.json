@@ -37,10 +37,7 @@
       "plan": "INDOOR",
       "type": "WINDOW_BAND",
       "label": "Aknad",
-      "center": {
-        "x": 7.0,
-        "y": 0.7
-      },
+      "center": { "x": 7.0, "y": 0.7 },
       "width": 10.8,
       "height": 0.4
     },
@@ -49,10 +46,7 @@
       "plan": "INDOOR",
       "type": "PRIVATE_ROOM",
       "label": "Privaatruum",
-      "center": {
-        "x": 14.0,
-        "y": 3.8
-      },
+      "center": { "x": 14.0, "y": 3.8 },
       "width": 5.0,
       "height": 3.2
     },
@@ -61,10 +55,7 @@
       "plan": "INDOOR",
       "type": "PLAY_AREA",
       "label": "Mangunurk",
-      "center": {
-        "x": 3.6,
-        "y": 8.8
-      },
+      "center": { "x": 3.6, "y": 8.8 },
       "width": 3.2,
       "height": 2.4
     }
@@ -76,10 +67,7 @@
       "capacity": 2,
       "plan": "INDOOR",
       "zone": "INDOOR",
-      "center": {
-        "x": 3.4,
-        "y": 3.2
-      },
+      "center": { "x": 3.4, "y": 3.2 },
       "width": 1.0,
       "height": 0.8,
       "rotationDegrees": 0.0,
@@ -94,10 +82,7 @@
       "capacity": 4,
       "plan": "INDOOR",
       "zone": "INDOOR",
-      "center": {
-        "x": 3.4,
-        "y": 5.4
-      },
+      "center": { "x": 3.4, "y": 5.4 },
       "width": 1.4,
       "height": 0.9,
       "rotationDegrees": 0.0,
@@ -112,10 +97,7 @@
       "capacity": 4,
       "plan": "INDOOR",
       "zone": "INDOOR",
-      "center": {
-        "x": 8.5,
-        "y": 3.2
-      },
+      "center": { "x": 8.5, "y": 3.2 },
       "width": 1.4,
       "height": 0.9,
       "rotationDegrees": 0.0,
@@ -130,10 +112,7 @@
       "capacity": 6,
       "plan": "INDOOR",
       "zone": "PRIVATE",
-      "center": {
-        "x": 14.0,
-        "y": 4.8
-      },
+      "center": { "x": 14.0, "y": 4.8 },
       "width": 1.8,
       "height": 1.1,
       "rotationDegrees": 0.0,
@@ -148,10 +127,7 @@
       "capacity": 4,
       "plan": "INDOOR",
       "zone": "INDOOR",
-      "center": {
-        "x": 12.7,
-        "y": 7.2
-      },
+      "center": { "x": 12.7, "y": 7.2 },
       "width": 1.4,
       "height": 0.9,
       "rotationDegrees": 0.0,
@@ -166,10 +142,7 @@
       "capacity": 2,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 3.8,
-        "y": 2.8
-      },
+      "center": { "x": 3.8, "y": 2.8 },
       "width": 1.0,
       "height": 0.8,
       "rotationDegrees": 0.0,
@@ -184,10 +157,7 @@
       "capacity": 4,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 8.0,
-        "y": 2.8
-      },
+      "center": { "x": 8.0, "y": 2.8 },
       "width": 1.4,
       "height": 0.9,
       "rotationDegrees": 0.0,
@@ -202,10 +172,7 @@
       "capacity": 6,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 12.4,
-        "y": 2.8
-      },
+      "center": { "x": 12.4, "y": 2.8 },
       "width": 1.8,
       "height": 1.0,
       "rotationDegrees": 0.0,
@@ -220,10 +187,7 @@
       "capacity": 2,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 3.8,
-        "y": 5.6
-      },
+      "center": { "x": 3.8, "y": 5.6 },
       "width": 1.0,
       "height": 0.8,
       "rotationDegrees": 0.0,
@@ -238,10 +202,7 @@
       "capacity": 4,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 8.0,
-        "y": 5.6
-      },
+      "center": { "x": 8.0, "y": 5.6 },
       "width": 1.4,
       "height": 0.9,
       "rotationDegrees": 0.0,
@@ -256,10 +217,7 @@
       "capacity": 6,
       "plan": "TERRACE",
       "zone": "TERRACE",
-      "center": {
-        "x": 12.4,
-        "y": 5.6
-      },
+      "center": { "x": 12.4, "y": 5.6 },
       "width": 1.8,
       "height": 1.0,
       "rotationDegrees": 0.0,

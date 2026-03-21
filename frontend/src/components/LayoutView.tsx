@@ -6,6 +6,8 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material'
@@ -13,8 +15,10 @@ import { useEffect, useMemo, useState } from 'react'
 import type {
   AvailabilityStatus,
   LayoutResponse,
+  PlanCode,
   ZoneCode,
 } from '../models/layout'
+import FloorplanFeatureTile from './FloorplanFeatureTile'
 import FloorplanTableTile from './FloorplanTableTile'
 import {
   fetchAvailability,
@@ -27,19 +31,26 @@ import {
 
 const GRID_COLUMNS = 12
 const GRID_ROWS = 8
+const ALL_ZONES = 'ALL'
+const ZONE_ORDER: ZoneCode[] = ['INDOOR', 'PRIVATE', 'TERRACE']
+
+function getDefaultPlan(layout: LayoutResponse) {
+  return layout.plans.find((plan) => plan.code === 'INDOOR')?.code ?? layout.plans[0]?.code ?? null
+}
 
 export default function LayoutView() {
   const [layout, setLayout] = useState<LayoutResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [hasAvailabilityData, setHasAvailabilityData] = useState(false)
+  const [activePlan, setActivePlan] = useState<PlanCode | null>(null)
   const [partySize, setPartySize] = useState(2)
-  const [zoneFilter, setZoneFilter] = useState<ZoneCode | 'ALL'>('ALL')
+  const [zoneFilter, setZoneFilter] = useState<ZoneCode | typeof ALL_ZONES>(ALL_ZONES)
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [time, setTime] = useState('19:00')
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tableStatusById, setTableStatusById] = useState<Record<string, AvailabilityStatus>>({})
-  const [recommendedTableIds, setRecommendedTableIds] = useState<Set<string>>(new Set())
+  const [topRecommendedTableId, setTopRecommendedTableId] = useState<string | null>(null)
   const [selectionNotice, setSelectionNotice] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,10 +64,17 @@ export default function LayoutView() {
         const payload = await fetchLayout()
         if (!cancelled) {
           setLayout(payload)
+          setActivePlan((currentPlan) => {
+            if (currentPlan && payload.plans.some((plan) => plan.code === currentPlan)) {
+              return currentPlan
+            }
+            return getDefaultPlan(payload)
+          })
         }
       } catch {
         if (!cancelled) {
           setLayout(null)
+          setActivePlan(null)
           setLoadError('Saaliplaani laadimine ebaõnnestus. Palun proovi hiljem uuesti.')
         }
       } finally {
@@ -74,23 +92,29 @@ export default function LayoutView() {
   }, [])
 
   useEffect(() => {
-    if (!layout) {
+    if (!layout || !activePlan) {
       setHasAvailabilityData(false)
       setTableStatusById({})
-      setRecommendedTableIds(new Set())
+      setTopRecommendedTableId(null)
       return
     }
 
     let cancelled = false
 
     async function loadStatusAndRecommendations() {
+      const plan = activePlan
+      if (!plan) {
+        return
+      }
+
       setLoading(true)
       setLoadError(null)
       const request = {
         date,
         time,
         partySize,
-        zone: zoneFilter === 'ALL' ? undefined : zoneFilter,
+        plan,
+        zone: zoneFilter === ALL_ZONES ? undefined : zoneFilter,
       }
 
       const [availabilityResult, recommendationsResult] = await Promise.allSettled([
@@ -113,18 +137,16 @@ export default function LayoutView() {
         setSelectionNotice(null)
         setSelectedTableId(null)
         setTableStatusById({})
-        setRecommendedTableIds(new Set())
+        setTopRecommendedTableId(null)
         setLoading(false)
         return
       }
 
       if (recommendationsResult.status === 'fulfilled') {
-        setRecommendedTableIds(
-          new Set(recommendationsResult.value.recommendations.map((item) => item.tableId)),
-        )
+        setTopRecommendedTableId(recommendationsResult.value.topRecommendationId)
       } else {
         setLoadError('Soovituse päring ebaõnnestus. Saadavad lauad on siiski nähtavad.')
-        setRecommendedTableIds(new Set())
+        setTopRecommendedTableId(null)
       }
 
       if (!cancelled) {
@@ -137,7 +159,45 @@ export default function LayoutView() {
     return () => {
       cancelled = true
     }
-  }, [layout, date, time, partySize, zoneFilter])
+  }, [layout, activePlan, date, time, partySize, zoneFilter])
+
+  const planTables = useMemo(
+    () => layout?.tables.filter((table) => table.plan === activePlan) ?? [],
+    [layout, activePlan],
+  )
+  const planFeatures = useMemo(
+    () => layout?.features.filter((feature) => feature.plan === activePlan) ?? [],
+    [layout, activePlan],
+  )
+  const activePlanSummary = useMemo(
+    () => layout?.plans.find((plan) => plan.code === activePlan) ?? null,
+    [layout, activePlan],
+  )
+  const zoneOptions = useMemo(() => {
+    const planZoneCodes = new Set(planTables.map((table) => table.zone))
+    return ZONE_ORDER.filter((zoneCode) => planZoneCodes.has(zoneCode))
+  }, [planTables])
+  const { minX, minY, maxX, maxY } = useMemo(
+    () => getLayoutBounds({ tables: planTables, features: planFeatures }),
+    [planTables, planFeatures],
+  )
+  const zoneLabelsByCode = useMemo(
+    () => Object.fromEntries((layout?.zones ?? []).map((zone) => [zone.code, zone.label])),
+    [layout],
+  )
+
+  useEffect(() => {
+    if (zoneFilter !== ALL_ZONES && !zoneOptions.includes(zoneFilter)) {
+      setZoneFilter(ALL_ZONES)
+    }
+  }, [zoneFilter, zoneOptions])
+
+  useEffect(() => {
+    if (selectedTableId && !planTables.some((table) => table.tableId === selectedTableId)) {
+      setSelectedTableId(null)
+      setSelectionNotice(null)
+    }
+  }, [selectedTableId, planTables])
 
   useEffect(() => {
     if (!selectedTableId) {
@@ -156,12 +216,6 @@ export default function LayoutView() {
         : `Laua ${selectedTableId} saadavus muutus. See laud ei sobi enam valitud tingimustega.`,
     )
   }, [selectedTableId, tableStatusById])
-
-  const { minX, minY, maxX, maxY } = useMemo(() => getLayoutBounds(layout), [layout])
-  const zoneLabelsByCode = useMemo(
-    () => Object.fromEntries((layout?.zones ?? []).map((zone) => [zone.code, zone.label])),
-    [layout],
-  )
 
   return (
     <Stack spacing={3}>
@@ -203,13 +257,16 @@ export default function LayoutView() {
               select
               label="Tsoon"
               value={zoneFilter}
-              onChange={(event) => setZoneFilter(event.target.value as 'ALL' | ZoneCode)}
+              onChange={(event) =>
+                setZoneFilter(event.target.value as typeof ALL_ZONES | ZoneCode)
+              }
+              disabled={!activePlan}
               sx={{ width: { xs: '100%', md: 220 } }}
             >
-              <MenuItem value="ALL">Kõik tsoonid</MenuItem>
-              {(layout?.zones ?? []).map((zone) => (
-                <MenuItem key={zone.code} value={zone.code}>
-                  {zone.label}
+              <MenuItem value={ALL_ZONES}>Kõik tsoonid</MenuItem>
+              {zoneOptions.map((zoneCode) => (
+                <MenuItem key={zoneCode} value={zoneCode}>
+                  {zoneLabelsByCode[zoneCode] ?? zoneCode}
                 </MenuItem>
               ))}
             </TextField>
@@ -224,6 +281,38 @@ export default function LayoutView() {
       <Paper sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Typography variant="h6">Saaliplaan</Typography>
+
+          {layout?.plans.length ? (
+            <Stack spacing={1}>
+              <Tabs
+                value={activePlan ?? getDefaultPlan(layout)}
+                onChange={(_event, nextValue: PlanCode) => {
+                  const nextZoneIsValid =
+                    zoneFilter === ALL_ZONES ||
+                    layout.tables.some(
+                      (table) => table.plan === nextValue && table.zone === zoneFilter,
+                    )
+                  if (!nextZoneIsValid) {
+                    setZoneFilter(ALL_ZONES)
+                  }
+                  setSelectionNotice(null)
+                  setSelectedTableId(null)
+                  setActivePlan(nextValue)
+                }}
+                variant="scrollable"
+                allowScrollButtonsMobile
+              >
+                {layout.plans.map((plan) => (
+                  <Tab key={plan.code} value={plan.code} label={plan.label} />
+                ))}
+              </Tabs>
+              {activePlanSummary ? (
+                <Typography variant="body2" color="text.secondary">
+                  {activePlanSummary.description}
+                </Typography>
+              ) : null}
+            </Stack>
+          ) : null}
 
           {loading ? (
             <Stack alignItems="center" py={4}>
@@ -241,7 +330,19 @@ export default function LayoutView() {
               gap: 1,
             }}
           >
-            {(layout?.tables ?? []).map((table) => {
+            {planFeatures.map((feature) => (
+              <FloorplanFeatureTile
+                key={feature.featureId}
+                feature={feature}
+                bounds={{ minX, minY, maxX, maxY }}
+                venueWidthMeters={layout?.venueWidthMeters ?? 1}
+                venueHeightMeters={layout?.venueHeightMeters ?? 1}
+                gridColumns={GRID_COLUMNS}
+                gridRows={GRID_ROWS}
+              />
+            ))}
+
+            {planTables.map((table) => {
               const availabilityStatus = tableStatusById[table.tableId] ?? 'UNAVAILABLE'
               return (
                 <FloorplanTableTile
@@ -255,7 +356,7 @@ export default function LayoutView() {
                   gridRows={GRID_ROWS}
                   hasAvailabilityData={hasAvailabilityData}
                   isSelected={selectedTableId === table.tableId}
-                  isRecommended={recommendedTableIds.has(table.tableId)}
+                  isRecommended={topRecommendedTableId === table.tableId}
                   zoneLabel={zoneLabelsByCode[table.zone] ?? table.zone}
                   onSelect={(tableId) => {
                     setSelectionNotice(null)
@@ -272,6 +373,7 @@ export default function LayoutView() {
             <Chip size="small" label="Vaba" sx={{ backgroundColor: 'success.light' }} />
             <Chip size="small" label="Broneeritud" sx={{ backgroundColor: 'grey.300' }} />
             <Chip size="small" label="Ei sobi" sx={{ backgroundColor: 'grey.100' }} />
+            <Chip size="small" label="Ala" variant="outlined" />
           </Stack>
 
           {selectionNotice ? (

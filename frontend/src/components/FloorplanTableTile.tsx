@@ -162,6 +162,8 @@ export default function FloorplanTableTile({
         gridColumn: `${colStart} / span ${colSpan}`,
         gridRow: `${rowStart} / span ${rowSpan}`,
         minWidth: 0,
+        position: 'relative',
+        zIndex: 1,
       }}
     >
       <Tooltip title={tooltipTitle} arrow placement="top">

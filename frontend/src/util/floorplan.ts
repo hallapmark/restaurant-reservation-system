@@ -1,4 +1,8 @@
-import type { AvailabilityStatus, LayoutResponse } from '../models/layout'
+import type {
+  AvailabilityStatus,
+  LayoutFeature,
+  LayoutTable,
+} from '../models/layout'
 
 export type TableDisplayState = 'RESERVED' | 'SELECTED' | 'RECOMMENDED' | 'AVAILABLE' | 'UNAVAILABLE'
 
@@ -7,6 +11,15 @@ export interface LayoutBounds {
   minY: number
   maxX: number
   maxY: number
+}
+
+interface LayoutRect {
+  center: {
+    x: number
+    y: number
+  }
+  width: number
+  height: number
 }
 
 export function getTableDisplayState(args: {
@@ -35,27 +48,32 @@ export function getTableDisplayState(args: {
   return 'UNAVAILABLE'
 }
 
-export function getLayoutBounds(layout: LayoutResponse | null): LayoutBounds {
-  if (!layout?.tables.length) {
+export function getLayoutBounds(args: {
+  tables: LayoutTable[]
+  features?: LayoutFeature[]
+}): LayoutBounds {
+  const items: LayoutRect[] = [...args.tables, ...(args.features ?? [])]
+
+  if (!items.length) {
     return { minX: 0, minY: 0, maxX: 1, maxY: 1 }
   }
 
-  let minX = layout.tables[0].center.x
-  let minY = layout.tables[0].center.y
-  let maxX = layout.tables[0].center.x
-  let maxY = layout.tables[0].center.y
+  let minX = items[0].center.x - items[0].width / 2
+  let minY = items[0].center.y - items[0].height / 2
+  let maxX = items[0].center.x + items[0].width / 2
+  let maxY = items[0].center.y + items[0].height / 2
 
-  for (const table of layout.tables.slice(1)) {
-    minX = Math.min(minX, table.center.x)
-    minY = Math.min(minY, table.center.y)
-    maxX = Math.max(maxX, table.center.x)
-    maxY = Math.max(maxY, table.center.y)
+  for (const item of items.slice(1)) {
+    minX = Math.min(minX, item.center.x - item.width / 2)
+    minY = Math.min(minY, item.center.y - item.height / 2)
+    maxX = Math.max(maxX, item.center.x + item.width / 2)
+    maxY = Math.max(maxY, item.center.y + item.height / 2)
   }
 
   return { minX, minY, maxX, maxY }
 }
 
-export interface TableGridPlacement {
+export interface GridPlacement {
   colStart: number
   colSpan: number
   rowStart: number
@@ -66,31 +84,132 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-export function getTableGridPlacement(args: {
-  table: LayoutResponse['tables'][number]
+function getGridPlacement(args: {
+  item: LayoutRect
   bounds: LayoutBounds
   venueWidthMeters: number
   venueHeightMeters: number
   gridColumns: number
   gridRows: number
-}): TableGridPlacement {
-  const { table, bounds, venueWidthMeters, venueHeightMeters, gridColumns, gridRows } = args
+  minColSpan: number
+  maxColSpan: number
+  minRowSpan: number
+  maxRowSpan: number
+  spanMultiplier: number
+}): GridPlacement {
+  const {
+    item,
+    bounds,
+    venueWidthMeters,
+    venueHeightMeters,
+    gridColumns,
+    gridRows,
+    minColSpan,
+    maxColSpan,
+    minRowSpan,
+    maxRowSpan,
+    spanMultiplier,
+  } = args
   const xRange = Math.max(bounds.maxX - bounds.minX, 1)
   const yRange = Math.max(bounds.maxY - bounds.minY, 1)
-  const normalizedX = (table.center.x - bounds.minX) / xRange
-  const normalizedY = (table.center.y - bounds.minY) / yRange
-  const colSpan = clamp(
-    Math.ceil((table.width / Math.max(venueWidthMeters, 1)) * gridColumns * 3),
-    2,
-    4,
-  )
-  const rowSpan = clamp(
-    Math.ceil((table.height / Math.max(venueHeightMeters, 1)) * gridRows * 3),
+  const left = item.center.x - item.width / 2
+  const right = item.center.x + item.width / 2
+  const top = item.center.y - item.height / 2
+  const bottom = item.center.y + item.height / 2
+
+  const leftNormalized = (left - bounds.minX) / xRange
+  const rightNormalized = (right - bounds.minX) / xRange
+  const topNormalized = (top - bounds.minY) / yRange
+  const bottomNormalized = (bottom - bounds.minY) / yRange
+
+  const rawColSpan = Math.max(
+    Math.ceil(rightNormalized * gridColumns) - Math.floor(leftNormalized * gridColumns),
+    Math.ceil((item.width / Math.max(venueWidthMeters, 1)) * gridColumns * spanMultiplier),
     1,
-    2,
   )
-  const colStart = Math.round(normalizedX * Math.max(gridColumns - colSpan, 0)) + 1
-  const rowStart = Math.round(normalizedY * Math.max(gridRows - rowSpan, 0)) + 1
+  const rawRowSpan = Math.max(
+    Math.ceil(bottomNormalized * gridRows) - Math.floor(topNormalized * gridRows),
+    Math.ceil((item.height / Math.max(venueHeightMeters, 1)) * gridRows * spanMultiplier),
+    1,
+  )
+
+  const colSpan = clamp(rawColSpan, minColSpan, Math.min(maxColSpan, gridColumns))
+  const rowSpan = clamp(rawRowSpan, minRowSpan, Math.min(maxRowSpan, gridRows))
+
+  const colStart = clamp(
+    Math.floor(leftNormalized * gridColumns) + 1,
+    1,
+    Math.max(gridColumns - colSpan + 1, 1),
+  )
+  const rowStart = clamp(
+    Math.floor(topNormalized * gridRows) + 1,
+    1,
+    Math.max(gridRows - rowSpan + 1, 1),
+  )
 
   return { colStart, colSpan, rowStart, rowSpan }
+}
+
+export function getTableGridPlacement(args: {
+  table: LayoutTable
+  bounds: LayoutBounds
+  venueWidthMeters: number
+  venueHeightMeters: number
+  gridColumns: number
+  gridRows: number
+}): GridPlacement {
+  const { table, ...rest } = args
+  return getGridPlacement({
+    item: table,
+    ...rest,
+    minColSpan: 2,
+    maxColSpan: 3,
+    minRowSpan: 1,
+    maxRowSpan: 2,
+    spanMultiplier: 2,
+  })
+}
+
+export function getFeatureGridPlacement(args: {
+  feature: LayoutFeature
+  bounds: LayoutBounds
+  venueWidthMeters: number
+  venueHeightMeters: number
+  gridColumns: number
+  gridRows: number
+}): GridPlacement {
+  const { feature, ...rest } = args
+  if (feature.type === 'WINDOW_BAND') {
+    return getGridPlacement({
+      item: feature,
+      ...rest,
+      minColSpan: 6,
+      maxColSpan: rest.gridColumns,
+      minRowSpan: 1,
+      maxRowSpan: 1,
+      spanMultiplier: 0.75,
+    })
+  }
+
+  if (feature.type === 'PRIVATE_ROOM') {
+    return getGridPlacement({
+      item: feature,
+      ...rest,
+      minColSpan: 4,
+      maxColSpan: rest.gridColumns,
+      minRowSpan: 2,
+      maxRowSpan: 4,
+      spanMultiplier: 1.25,
+    })
+  }
+
+  return getGridPlacement({
+    item: feature,
+    ...rest,
+    minColSpan: 3,
+    maxColSpan: 5,
+    minRowSpan: 2,
+    maxRowSpan: 3,
+    spanMultiplier: 1.2,
+  })
 }

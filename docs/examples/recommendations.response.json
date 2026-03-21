@@ -1,11 +1,21 @@
 {
-  "topRecommendationId": "T1",
+  "topRecommendationId": "T3",
   "recommendations": [
     {
-      "tableId": "T1",
+      "tableId": "T3",
       "score": 100.0,
       "reasons": [
-        "See on Sulle hea laud, sest..."
+        "Mahutab seltskonna täpselt.",
+        "Pakub arvestatavat privaatsust.",
+        "Asub akna lähedal."
+      ]
+    },
+    {
+      "tableId": "T2",
+      "score": 100.0,
+      "reasons": [
+        "Mahutab seltskonna täpselt.",
+        "Pakub arvestatavat privaatsust."
       ]
     }
   ]

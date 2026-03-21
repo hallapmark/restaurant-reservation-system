@@ -1,13 +1,14 @@
 openapi: 3.0.3
 info:
-  title: Nutikas Restorani Reserveerimissüsteem API
+  title: Nutikas Restorani Reserveerimissusteem API
   version: 1.0.0
   description: >
-    Spring Boot v1 API contract for table-selection and reservation flow with
-    floorplan-first UI and recommendation support.
+    Spring Boot API contract for the floorplan-first restaurant demo with
+    plan tabs, deterministic demo occupancy, and table recommendations.
 servers:
   - url: /api/v1
     description: API version 1 base path
+
 paths:
   /layout:
     get:
@@ -17,14 +18,15 @@ paths:
       operationId: getLayout
       responses:
         "200":
-          description: Floorplan geometry and metadata
+          description: Floorplan geometry, plans, zones, and visual features
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/LayoutResponse"
+
   /availability:
     post:
-      summary: Get table availability for a time + party
+      summary: Get table availability for a plan, time, and party
       tags:
         - availability
       operationId: getAvailability
@@ -36,7 +38,7 @@ paths:
               $ref: "#/components/schemas/AvailabilityRequest"
       responses:
         "200":
-          description: Availability state for all tables
+          description: Availability state for tables in the selected plan
           content:
             application/json:
               schema:
@@ -47,6 +49,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /recommendations:
     post:
       summary: Get ordered recommendations for available tables
@@ -72,6 +75,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /reservations:
     post:
       summary: Confirm reservation on selected table
@@ -103,6 +107,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
   /reservations/{id}:
     get:
       summary: Get reservation details
@@ -137,14 +142,20 @@ components:
         - INDOOR
         - TERRACE
         - PRIVATE
-    TableStatus:
+
+    PlanCode:
       type: string
       enum:
-        - AVAILABLE
-        - RESERVED
-        - RECOMMENDED
-        - SELECTED
-        - UNAVAILABLE
+        - INDOOR
+        - TERRACE
+
+    FeatureType:
+      type: string
+      enum:
+        - PRIVATE_ROOM
+        - PLAY_AREA
+        - WINDOW_BAND
+
     AvailabilityStatus:
       type: string
       description: >
@@ -153,6 +164,7 @@ components:
         - AVAILABLE
         - RESERVED
         - UNAVAILABLE
+
     Preference:
       type: string
       enum:
@@ -160,6 +172,7 @@ components:
         - WINDOW
         - ACCESSIBLE
         - NEAR_PLAY_AREA
+
     ReservationStatus:
       type: string
       enum:
@@ -194,6 +207,19 @@ components:
         - x
         - y
 
+    PlanSummary:
+      type: object
+      properties:
+        code:
+          $ref: "#/components/schemas/PlanCode"
+        label:
+          type: string
+        description:
+          type: string
+      required:
+        - code
+        - label
+
     ZoneSummary:
       type: object
       properties:
@@ -207,6 +233,32 @@ components:
         - code
         - label
 
+    LayoutFeature:
+      type: object
+      properties:
+        featureId:
+          type: string
+        plan:
+          $ref: "#/components/schemas/PlanCode"
+        type:
+          $ref: "#/components/schemas/FeatureType"
+        label:
+          type: string
+        center:
+          $ref: "#/components/schemas/Point"
+        width:
+          type: number
+        height:
+          type: number
+      required:
+        - featureId
+        - plan
+        - type
+        - label
+        - center
+        - width
+        - height
+
     TableGeometry:
       type: object
       properties:
@@ -217,6 +269,8 @@ components:
         capacity:
           type: integer
           minimum: 1
+        plan:
+          $ref: "#/components/schemas/PlanCode"
         zone:
           $ref: "#/components/schemas/Zone"
         center:
@@ -227,14 +281,30 @@ components:
           type: number
         rotationDegrees:
           type: number
+        accessible:
+          type: boolean
+        nearWindow:
+          type: boolean
+        nearPlayArea:
+          type: boolean
+        privacyScore:
+          type: number
+          minimum: 0
+          maximum: 1
       required:
         - tableId
         - label
         - capacity
+        - plan
         - zone
         - center
         - width
         - height
+        - rotationDegrees
+        - accessible
+        - nearWindow
+        - nearPlayArea
+        - privacyScore
 
     LayoutResponse:
       type: object
@@ -245,10 +315,18 @@ components:
           type: number
         venueHeightMeters:
           type: number
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanSummary"
         zones:
           type: array
           items:
             $ref: "#/components/schemas/ZoneSummary"
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/LayoutFeature"
         tables:
           type: array
           items:
@@ -257,7 +335,9 @@ components:
         - layoutId
         - venueWidthMeters
         - venueHeightMeters
+        - plans
         - zones
+        - features
         - tables
 
     AvailabilityRequest:
@@ -272,15 +352,19 @@ components:
         partySize:
           type: integer
           minimum: 1
+        plan:
+          $ref: "#/components/schemas/PlanCode"
         zone:
           allOf:
             - $ref: "#/components/schemas/Zone"
           description: >
-            Optional filter. If provided, non-matching tables are marked UNAVAILABLE.
+            Optional filter. If provided, non-matching tables inside the selected plan
+            are marked UNAVAILABLE.
       required:
         - date
         - time
         - partySize
+        - plan
 
     RecommendationRequest:
       type: object
@@ -301,8 +385,7 @@ components:
       properties:
         tableStatusById:
           description: >
-            Map keyed by tableId (for all tables in the current layout), where values are
-            availability states for the requested date/time and party size.
+            Map keyed by tableId for tables in the selected plan only.
           type: object
           additionalProperties:
             $ref: "#/components/schemas/AvailabilityStatus"
