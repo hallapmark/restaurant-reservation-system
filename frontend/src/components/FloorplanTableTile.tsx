@@ -86,14 +86,20 @@ function getStateLabel(displayState: TableDisplayState, hasAvailabilityData: boo
 function getTooltipTitle(args: {
   stateLabel: string
   zoneLabel: string
+  detailLines?: string[]
 }): ReactNode {
-  const { stateLabel, zoneLabel } = args
+  const { stateLabel, zoneLabel, detailLines = [] } = args
 
   return (
     <Stack spacing={0.2}>
       <Typography variant="caption" sx={{ fontWeight: 700 }}>
         {stateLabel}
       </Typography>
+      {detailLines.map((detailLine) => (
+        <Typography key={detailLine} variant="caption">
+          {detailLine}
+        </Typography>
+      ))}
       <Typography variant="caption">
         Tsoon: {zoneLabel}
       </Typography>
@@ -113,6 +119,7 @@ interface FloorplanTableTileProps {
   isSelected: boolean
   isRecommended: boolean
   zoneLabel: string
+  stateDetailLines?: string[]
   onSelect: (tableId: string) => void
 }
 
@@ -128,6 +135,7 @@ export default function FloorplanTableTile({
   isSelected,
   isRecommended,
   zoneLabel,
+  stateDetailLines = [],
   onSelect,
 }: FloorplanTableTileProps) {
   const isSelectable = hasAvailabilityData && availabilityStatus === 'AVAILABLE'
@@ -146,7 +154,7 @@ export default function FloorplanTableTile({
         color: 'text.secondary',
       }
   const stateLabel = getStateLabel(displayState, hasAvailabilityData)
-  const tooltipTitle = getTooltipTitle({ stateLabel, zoneLabel })
+  const tooltipTitle = getTooltipTitle({ stateLabel, zoneLabel, detailLines: stateDetailLines })
   const { colStart, colSpan, rowStart, rowSpan } = getTableGridPlacement({
     table,
     bounds,
@@ -173,7 +181,7 @@ export default function FloorplanTableTile({
             type="button"
             disabled={!isSelectable}
             aria-pressed={isSelected}
-            aria-label={`${table.label}. ${stateLabel}. Tsoon: ${zoneLabel}.`}
+            aria-label={`${table.label}. ${[stateLabel, ...stateDetailLines, `Tsoon: ${zoneLabel}.`].join(' ')}`}
             onClick={() => onSelect(table.tableId)}
             sx={{
               appearance: 'none',

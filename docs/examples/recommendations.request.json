@@ -4,6 +4,7 @@
   "partySize": 4,
   "plan": "INDOOR",
   "zone": "INDOOR",
+  "accessibleRequired": false,
   "preferences": [
     "PRIVACY",
     "WINDOW"

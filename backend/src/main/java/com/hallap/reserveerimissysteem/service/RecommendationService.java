@@ -2,8 +2,8 @@ package com.hallap.reserveerimissysteem.service;
 
 import com.hallap.reserveerimissysteem.dto.AvailabilityStatus;
 import com.hallap.reserveerimissysteem.dto.LayoutResponse;
-import com.hallap.reserveerimissysteem.dto.Preference;
 import com.hallap.reserveerimissysteem.dto.Recommendation;
+import com.hallap.reserveerimissysteem.dto.RecommendationPreference;
 import com.hallap.reserveerimissysteem.dto.RecommendationsRequest;
 import com.hallap.reserveerimissysteem.dto.RecommendationsResponse;
 import org.springframework.stereotype.Service;
@@ -33,13 +33,20 @@ public class RecommendationService {
                 date,
                 time,
                 request.partySize(),
-                request.zone()
+                request.zone(),
+                request.accessibleRequired()
         );
-        List<Preference> preferences = request.preferences() == null ? List.of() : List.copyOf(request.preferences());
+        List<RecommendationPreference> preferences =
+                request.preferences() == null ? List.of() : List.copyOf(request.preferences());
 
         List<RecommendationCandidate> candidates = layoutService.getTablesForPlan(request.plan()).stream()
                 .filter(table -> statusById.get(table.tableId()) == AvailabilityStatus.AVAILABLE)
-                .map(table -> scoreTable(table, request.partySize(), preferences))
+                .map(table -> scoreTable(
+                        table,
+                        request.partySize(),
+                        request.accessibleRequired(),
+                        preferences
+                ))
                 .sorted(Comparator
                         .comparingDouble(RecommendationCandidate::score).reversed()
                         .thenComparing(Comparator.comparingInt(RecommendationCandidate::matchedPreferenceCount).reversed())
@@ -58,7 +65,8 @@ public class RecommendationService {
     private RecommendationCandidate scoreTable(
             LayoutResponse.TableGeometry table,
             int partySize,
-            List<Preference> preferences
+            boolean accessibleRequired,
+            List<RecommendationPreference> preferences
     ) {
         double score = 100.0;
         int matchedPreferenceCount = 0;
@@ -69,7 +77,11 @@ public class RecommendationService {
         score -= efficiencyPenalty;
         reasons.add(getEfficiencyReason(unusedSeats));
 
-        if (preferences.contains(Preference.PRIVACY) && table.privacyScore() > 0.0) {
+        if (accessibleRequired) {
+            reasons.add("Vastab ligipääsetavuse nõudele.");
+        }
+
+        if (preferences.contains(RecommendationPreference.PRIVACY) && table.privacyScore() > 0.0) {
             score += 12.0 * table.privacyScore();
             matchedPreferenceCount++;
             reasons.add(table.privacyScore() >= 0.8
@@ -77,19 +89,13 @@ public class RecommendationService {
                     : "Pakub arvestatavat privaatsust.");
         }
 
-        if (preferences.contains(Preference.WINDOW) && table.nearWindow()) {
+        if (preferences.contains(RecommendationPreference.WINDOW) && table.nearWindow()) {
             score += 10.0;
             matchedPreferenceCount++;
             reasons.add("Asub akna lähedal.");
         }
 
-        if (preferences.contains(Preference.ACCESSIBLE) && table.accessible()) {
-            score += 12.0;
-            matchedPreferenceCount++;
-            reasons.add("Ligipääsetav laud.");
-        }
-
-        if (preferences.contains(Preference.NEAR_PLAY_AREA) && table.nearPlayArea()) {
+        if (preferences.contains(RecommendationPreference.NEAR_PLAY_AREA) && table.nearPlayArea()) {
             score += 10.0;
             matchedPreferenceCount++;
             reasons.add("Laste mängunurk on lähedal.");

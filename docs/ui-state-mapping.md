@@ -18,6 +18,7 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
 - `date`
 - `time`
 - `partySize`
+- `accessibleRequired`
 
 ## V1 valikulised väljad
 - `zone`
@@ -34,7 +35,7 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
   Põhineb `POST /availability` vastusel.
   - `AVAILABLE`
   - `RESERVED` = laud on antud `date + time` jaoks juba hõivatud (teise reserveeringu tõttu või süsteemi poolt eelnevalt kinni võetud). See on siis hard block. 
-  - `UNAVAILABLE` = laud ei sobi praeguse päringukonfiguratsiooniga (`partySize` või optional `zone` järgi), mitte tingimata keelatud reserveerida.
+  - `UNAVAILABLE` = laud ei sobi praeguse päringukonfiguratsiooniga (`partySize`, optional `zone` või `accessibleRequired` järgi), mitte tingimata keelatud reserveerida.
   - Märkus: `availability` väljastab staatuse kõigi saaliplaani laua ID-de kohta.
 
 - `recommendation` (top + põhjendused):  
@@ -73,6 +74,8 @@ Selgitusi:
 ## Märkmed
 - `layout` peab olema **primary view** kogu v1 kogemusel.
 - `availability` ja `recommendations` vastuseid tuleks uuendada sõltuvalt kuupäev+kellaaeg + seltskonna suurus filtritest.
+- `accessibleRequired` on hard nõue, mis mõjutab `availability` tulemust.
+- `preferences` mõjutavad ainult soovituse järjestust, mitte laudade baas-saadavust.
 - `/recommendations` peaks olema saadav ka siis, kui ükski laud ei ole otseselt soovitatud – selle juhul `topRecommendationId` on `null` ja nimekiri tühi.
 - Hoveri ja värvikood:
   - `RESERVED`: selgelt välja lülitatav punane olek; hover tekst „Broneeritud selle ajaks”.

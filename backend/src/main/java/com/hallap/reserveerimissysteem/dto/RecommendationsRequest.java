@@ -14,6 +14,7 @@ public record RecommendationsRequest(
         @Min(1) int partySize,
         @NotNull PlanCode plan,
         Zone zone,
-        List<Preference> preferences
+        boolean accessibleRequired,
+        List<RecommendationPreference> preferences
 ) {
 }

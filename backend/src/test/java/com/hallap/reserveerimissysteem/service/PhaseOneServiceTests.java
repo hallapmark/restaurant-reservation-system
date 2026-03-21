@@ -77,7 +77,8 @@ class PhaseOneServiceTests {
                 date,
                 time,
                 partySize,
-                zone
+                zone,
+                false
         );
         List<LayoutResponse.TableGeometry> indoorTables = layoutService.getTablesForPlan(PlanCode.INDOOR);
         Set<String> reservedIds = occupancyService.getReservedTableIds(PlanCode.INDOOR, date, time, indoorTables);
@@ -105,7 +106,8 @@ class PhaseOneServiceTests {
                 4,
                 PlanCode.INDOOR,
                 Zone.INDOOR,
-                List.of(Preference.WINDOW)
+                false,
+                List.of(RecommendationPreference.WINDOW)
         );
 
         RecommendationsResponse recommendations = recommendationService.getRecommendations(request);
@@ -114,7 +116,8 @@ class PhaseOneServiceTests {
                 LocalDate.parse(request.date()),
                 LocalTime.parse(request.time()),
                 request.partySize(),
-                request.zone()
+                request.zone(),
+                request.accessibleRequired()
         );
 
         assertThat(recommendations.recommendations())
@@ -137,6 +140,7 @@ class PhaseOneServiceTests {
                 2,
                 PlanCode.TERRACE,
                 Zone.TERRACE,
+                false,
                 List.of()
         ));
 
@@ -158,21 +162,56 @@ class PhaseOneServiceTests {
                 4,
                 PlanCode.INDOOR,
                 Zone.INDOOR,
-                List.of(Preference.WINDOW)
+                false,
+                List.of(RecommendationPreference.WINDOW)
         ));
 
         assertThat(indexOf(response, "T3")).isLessThan(indexOf(response, "T2"));
     }
 
     @Test
-    void returnsEmptyRecommendationsWhenNoCandidatesExist() {
+    void availabilityMarksInaccessibleTablesUnavailableWhenAccessibilityIsRequired() {
+        Map<String, AvailabilityStatus> statuses = availabilityService.calculateAvailability(
+                PlanCode.TERRACE,
+                LocalDate.of(2026, 3, 21),
+                LocalTime.of(15, 0),
+                2,
+                Zone.TERRACE,
+                true
+        );
+
+        assertThat(statuses.get("T8")).isEqualTo(AvailabilityStatus.UNAVAILABLE);
+        assertThat(statuses.get("T9")).isEqualTo(AvailabilityStatus.UNAVAILABLE);
+        assertThat(statuses.get("T6")).isEqualTo(AvailabilityStatus.AVAILABLE);
+    }
+
+    @Test
+    void recommendationsExcludeInaccessibleTablesWhenAccessibilityIsRequired() {
         RecommendationsResponse response = recommendationService.getRecommendations(new RecommendationsRequest(
                 "2026-03-21",
-                "19:00",
-                10,
+                "15:00",
+                2,
                 PlanCode.TERRACE,
                 Zone.TERRACE,
-                List.of(Preference.ACCESSIBLE)
+                true,
+                List.of()
+        ));
+
+        assertThat(response.recommendations())
+                .extracting(Recommendation::tableId)
+                .doesNotContain("T8", "T9");
+    }
+
+    @Test
+    void returnsEmptyRecommendationsWhenNoAccessibleCandidatesExist() {
+        RecommendationsResponse response = recommendationService.getRecommendations(new RecommendationsRequest(
+                "2026-03-21",
+                "21:00",
+                2,
+                PlanCode.INDOOR,
+                Zone.PRIVATE,
+                true,
+                List.of(RecommendationPreference.PRIVACY)
         ));
 
         assertThat(response.topRecommendationId()).isNull();
@@ -203,7 +242,8 @@ class PhaseOneServiceTests {
                     date,
                     candidateTime,
                     partySize,
-                    zone
+                    zone,
+                    false
             );
             boolean allAvailable = requiredTableIds.stream()
                     .allMatch(tableId -> statuses.get(tableId) == AvailabilityStatus.AVAILABLE);

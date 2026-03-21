@@ -33,7 +33,8 @@ public class AvailabilityService {
                         LocalDate.parse(request.date()),
                         LocalTime.parse(request.time()),
                         request.partySize(),
-                        request.zone()
+                        request.zone(),
+                        request.accessibleRequired()
                 ),
                 Instant.now()
         );
@@ -44,7 +45,8 @@ public class AvailabilityService {
             LocalDate date,
             LocalTime time,
             int partySize,
-            Zone zone
+            Zone zone,
+            boolean accessibleRequired
     ) {
         List<LayoutResponse.TableGeometry> tables = layoutService.getTablesForPlan(plan);
         Set<String> reservedTableIds = occupancyService.getReservedTableIds(plan, date, time, tables);
@@ -54,7 +56,7 @@ public class AvailabilityService {
             AvailabilityStatus status;
             if (reservedTableIds.contains(table.tableId())) {
                 status = AvailabilityStatus.RESERVED;
-            } else if (!isSuitableForRequest(table, partySize, zone)) {
+            } else if (!isSuitableForRequest(table, partySize, zone, accessibleRequired)) {
                 status = AvailabilityStatus.UNAVAILABLE;
             } else {
                 status = AvailabilityStatus.AVAILABLE;
@@ -65,11 +67,20 @@ public class AvailabilityService {
         return statuses;
     }
 
-    private boolean isSuitableForRequest(LayoutResponse.TableGeometry table, int partySize, Zone zone) {
+    private boolean isSuitableForRequest(
+            LayoutResponse.TableGeometry table,
+            int partySize,
+            Zone zone,
+            boolean accessibleRequired
+    ) {
         if (table.capacity() < partySize) {
             return false;
         }
 
-        return zone == null || table.zone() == zone;
+        if (zone != null && table.zone() != zone) {
+            return false;
+        }
+
+        return !accessibleRequired || table.accessible();
     }
 }

@@ -173,6 +173,13 @@ components:
         - ACCESSIBLE
         - NEAR_PLAY_AREA
 
+    RecommendationPreference:
+      type: string
+      enum:
+        - PRIVACY
+        - WINDOW
+        - NEAR_PLAY_AREA
+
     ReservationStatus:
       type: string
       enum:
@@ -360,11 +367,17 @@ components:
           description: >
             Optional filter. If provided, non-matching tables inside the selected plan
             are marked UNAVAILABLE.
+        accessibleRequired:
+          type: boolean
+          description: >
+            Hard requirement. If true, non-accessible tables inside the selected plan
+            are marked UNAVAILABLE.
       required:
         - date
         - time
         - partySize
         - plan
+        - accessibleRequired
 
     RecommendationRequest:
       type: object
@@ -375,7 +388,7 @@ components:
             preferences:
               type: array
               items:
-                $ref: "#/components/schemas/Preference"
+                $ref: "#/components/schemas/RecommendationPreference"
               uniqueItems: true
               description: >
                 Used to calculate recommendation score and explanation reasons.

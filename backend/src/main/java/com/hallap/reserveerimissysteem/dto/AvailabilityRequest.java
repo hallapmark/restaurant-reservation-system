@@ -18,6 +18,7 @@ public record AvailabilityRequest(
 
         @Min(1) int partySize,
         @NotNull PlanCode plan,
-        Zone zone
+        Zone zone,
+        boolean accessibleRequired
 ) {
 }

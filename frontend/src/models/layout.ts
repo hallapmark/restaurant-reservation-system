@@ -6,7 +6,7 @@ export type FeatureType = 'PRIVATE_ROOM' | 'PLAY_AREA' | 'WINDOW_BAND'
 
 export type AvailabilityStatus = 'AVAILABLE' | 'RESERVED' | 'UNAVAILABLE'
 
-export type Preference = 'PRIVACY' | 'WINDOW' | 'ACCESSIBLE' | 'NEAR_PLAY_AREA'
+export type RecommendationPreference = 'PRIVACY' | 'WINDOW' | 'NEAR_PLAY_AREA'
 
 export interface LayoutPoint {
   x: number
@@ -67,6 +67,7 @@ export interface AvailabilityRequest {
   partySize: number
   plan: PlanCode
   zone?: ZoneCode | null
+  accessibleRequired: boolean
 }
 
 export interface AvailabilityResponse {
@@ -86,7 +87,8 @@ export interface RecommendationsRequest {
   partySize: number
   plan: PlanCode
   zone?: ZoneCode | null
-  preferences: Preference[]
+  accessibleRequired: boolean
+  preferences: RecommendationPreference[]
 }
 
 export interface RecommendationsResponse {

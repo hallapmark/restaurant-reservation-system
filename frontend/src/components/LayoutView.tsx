@@ -1,9 +1,10 @@
 import {
   Alert,
   Box,
+  Checkbox,
   Chip,
   CircularProgress,
-  MenuItem,
+  FormControlLabel,
   Paper,
   Stack,
   Tab,
@@ -16,10 +17,12 @@ import type {
   AvailabilityStatus,
   LayoutResponse,
   PlanCode,
-  ZoneCode,
+  Recommendation,
+  RecommendationPreference,
 } from '../models/layout'
 import FloorplanFeatureTile from './FloorplanFeatureTile'
 import FloorplanTableTile from './FloorplanTableTile'
+import RecommendationSummaryPanel from './RecommendationSummaryPanel'
 import {
   fetchAvailability,
   fetchLayout,
@@ -31,8 +34,14 @@ import {
 
 const GRID_COLUMNS = 12
 const GRID_ROWS = 8
-const ALL_ZONES = 'ALL'
-const ZONE_ORDER: ZoneCode[] = ['INDOOR', 'PRIVATE', 'TERRACE']
+const RECOMMENDATION_PREFERENCE_OPTIONS: Array<{
+  value: RecommendationPreference
+  label: string
+}> = [
+  { value: 'PRIVACY', label: 'Privaatsus' },
+  { value: 'WINDOW', label: 'Akna all' },
+  { value: 'NEAR_PLAY_AREA', label: 'Mängunurga lähedal' },
+]
 
 function getDefaultPlan(layout: LayoutResponse) {
   return layout.plans.find((plan) => plan.code === 'INDOOR')?.code ?? layout.plans[0]?.code ?? null
@@ -42,15 +51,18 @@ export default function LayoutView() {
   const [layout, setLayout] = useState<LayoutResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [recommendationError, setRecommendationError] = useState<string | null>(null)
   const [hasAvailabilityData, setHasAvailabilityData] = useState(false)
   const [activePlan, setActivePlan] = useState<PlanCode | null>(null)
   const [partySize, setPartySize] = useState(2)
-  const [zoneFilter, setZoneFilter] = useState<ZoneCode | typeof ALL_ZONES>(ALL_ZONES)
+  const [accessibleRequired, setAccessibleRequired] = useState(false)
+  const [selectedPreferences, setSelectedPreferences] = useState<RecommendationPreference[]>([])
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [time, setTime] = useState('19:00')
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
   const [tableStatusById, setTableStatusById] = useState<Record<string, AvailabilityStatus>>({})
   const [topRecommendedTableId, setTopRecommendedTableId] = useState<string | null>(null)
+  const [topRecommendation, setTopRecommendation] = useState<Recommendation | null>(null)
   const [selectionNotice, setSelectionNotice] = useState<string | null>(null)
 
   useEffect(() => {
@@ -59,6 +71,7 @@ export default function LayoutView() {
     async function loadLayout() {
       setLoading(true)
       setLoadError(null)
+      setRecommendationError(null)
 
       try {
         const payload = await fetchLayout()
@@ -75,6 +88,8 @@ export default function LayoutView() {
         if (!cancelled) {
           setLayout(null)
           setActivePlan(null)
+          setTopRecommendation(null)
+          setTopRecommendedTableId(null)
           setLoadError('Saaliplaani laadimine ebaõnnestus. Palun proovi hiljem uuesti.')
         }
       } finally {
@@ -96,6 +111,8 @@ export default function LayoutView() {
       setHasAvailabilityData(false)
       setTableStatusById({})
       setTopRecommendedTableId(null)
+      setTopRecommendation(null)
+      setRecommendationError(null)
       return
     }
 
@@ -109,17 +126,18 @@ export default function LayoutView() {
 
       setLoading(true)
       setLoadError(null)
+      setRecommendationError(null)
       const request = {
         date,
         time,
         partySize,
         plan,
-        zone: zoneFilter === ALL_ZONES ? undefined : zoneFilter,
+        accessibleRequired,
       }
 
       const [availabilityResult, recommendationsResult] = await Promise.allSettled([
         fetchAvailability(request),
-        fetchRecommendations({ ...request, preferences: [] }),
+        fetchRecommendations({ ...request, preferences: selectedPreferences }),
       ])
 
       if (cancelled) {
@@ -138,15 +156,26 @@ export default function LayoutView() {
         setSelectedTableId(null)
         setTableStatusById({})
         setTopRecommendedTableId(null)
+        setTopRecommendation(null)
+        setRecommendationError(null)
         setLoading(false)
         return
       }
 
       if (recommendationsResult.status === 'fulfilled') {
-        setTopRecommendedTableId(recommendationsResult.value.topRecommendationId)
+        const nextTopRecommendationId = recommendationsResult.value.topRecommendationId
+        setTopRecommendedTableId(nextTopRecommendationId)
+        setTopRecommendation(
+          nextTopRecommendationId == null
+            ? null
+            : recommendationsResult.value.recommendations.find(
+                (recommendation) => recommendation.tableId === nextTopRecommendationId,
+              ) ?? null,
+        )
       } else {
-        setLoadError('Soovituse päring ebaõnnestus. Saadavad lauad on siiski nähtavad.')
+        setRecommendationError('Soovituse päring ebaõnnestus. Saadavad lauad on siiski nähtavad.')
         setTopRecommendedTableId(null)
+        setTopRecommendation(null)
       }
 
       if (!cancelled) {
@@ -159,7 +188,7 @@ export default function LayoutView() {
     return () => {
       cancelled = true
     }
-  }, [layout, activePlan, date, time, partySize, zoneFilter])
+  }, [layout, activePlan, date, time, partySize, accessibleRequired, selectedPreferences])
 
   const planTables = useMemo(
     () => layout?.tables.filter((table) => table.plan === activePlan) ?? [],
@@ -173,10 +202,6 @@ export default function LayoutView() {
     () => layout?.plans.find((plan) => plan.code === activePlan) ?? null,
     [layout, activePlan],
   )
-  const zoneOptions = useMemo(() => {
-    const planZoneCodes = new Set(planTables.map((table) => table.zone))
-    return ZONE_ORDER.filter((zoneCode) => planZoneCodes.has(zoneCode))
-  }, [planTables])
   const { minX, minY, maxX, maxY } = useMemo(
     () => getLayoutBounds({ tables: planTables, features: planFeatures }),
     [planTables, planFeatures],
@@ -185,12 +210,39 @@ export default function LayoutView() {
     () => Object.fromEntries((layout?.zones ?? []).map((zone) => [zone.code, zone.label])),
     [layout],
   )
+  const topRecommendationTable = useMemo(
+    () =>
+      topRecommendedTableId == null
+        ? null
+        : planTables.find((table) => table.tableId === topRecommendedTableId) ?? null,
+    [planTables, topRecommendedTableId],
+  )
 
-  useEffect(() => {
-    if (zoneFilter !== ALL_ZONES && !zoneOptions.includes(zoneFilter)) {
-      setZoneFilter(ALL_ZONES)
+  function getUnavailableReasonLines(table: LayoutResponse['tables'][number]) {
+    if (!hasAvailabilityData || tableStatusById[table.tableId] !== 'UNAVAILABLE') {
+      return []
     }
-  }, [zoneFilter, zoneOptions])
+
+    const reasonLines: string[] = []
+
+    if (table.capacity < partySize) {
+      reasonLines.push('Ei mahuta valitud seltskonda.')
+    }
+
+    if (accessibleRequired && !table.accessible) {
+      reasonLines.push('Ei ole ligipääsetav.')
+    }
+
+    return reasonLines.length > 0 ? reasonLines : ['Ei sobi valitud tingimustega.']
+  }
+
+  function togglePreference(preference: RecommendationPreference) {
+    setSelectedPreferences((currentPreferences) =>
+      currentPreferences.includes(preference)
+        ? currentPreferences.filter((currentPreference) => currentPreference !== preference)
+        : [...currentPreferences, preference],
+    )
+  }
 
   useEffect(() => {
     if (selectedTableId && !planTables.some((table) => table.tableId === selectedTableId)) {
@@ -223,6 +275,30 @@ export default function LayoutView() {
         <Stack spacing={2}>
           <Typography variant="h6">Filtrid</Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <Stack spacing={0.8} sx={{ minWidth: { xs: '100%', md: 220 } }}>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                Asukoht
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {(layout?.plans ?? []).map((plan) => {
+                  const isSelected = activePlan === plan.code
+                  return (
+                    <Chip
+                      key={plan.code}
+                      label={plan.label}
+                      clickable
+                      color={isSelected ? 'primary' : 'default'}
+                      variant={isSelected ? 'filled' : 'outlined'}
+                      onClick={() => {
+                        setSelectionNotice(null)
+                        setSelectedTableId(null)
+                        setActivePlan(plan.code)
+                      }}
+                    />
+                  )
+                })}
+              </Stack>
+            </Stack>
             <TextField
               type="date"
               label="Kuupäev"
@@ -253,30 +329,73 @@ export default function LayoutView() {
               slotProps={{ htmlInput: { min: 1, max: 20 } }}
               sx={{ width: { xs: '100%', md: 220 } }}
             />
-            <TextField
-              select
-              label="Tsoon"
-              value={zoneFilter}
-              onChange={(event) =>
-                setZoneFilter(event.target.value as typeof ALL_ZONES | ZoneCode)
-              }
-              disabled={!activePlan}
-              sx={{ width: { xs: '100%', md: 220 } }}
-            >
-              <MenuItem value={ALL_ZONES}>Kõik tsoonid</MenuItem>
-              {zoneOptions.map((zoneCode) => (
-                <MenuItem key={zoneCode} value={zoneCode}>
-                  {zoneLabelsByCode[zoneCode] ?? zoneCode}
-                </MenuItem>
-              ))}
-            </TextField>
           </Stack>
-          <Typography variant="body2" color="text.secondary">
-            UNAVAILABLE tekib siis, kui laud ei vasta kohustuslikele kriteeriumidele (seltskonna
-            suurus või tsoon). Eelistused lisanduvad hiljem soovituste vaates.
-          </Typography>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={2}
+            alignItems={{ xs: 'flex-start', md: 'center' }}
+            justifyContent="space-between"
+          >
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={accessibleRequired}
+                  onChange={(event) => setAccessibleRequired(event.target.checked)}
+                />
+              }
+              label="Ligipääsetavus vajalik"
+            />
+            <Typography variant="body2" color="text.secondary">
+              Ligipääsetavuse nõue piirab sobivaid laudu kohe. Eelistused mõjutavad ainult
+              soovituste järjestust.
+            </Typography>
+          </Stack>
+
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">Eelistused</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {RECOMMENDATION_PREFERENCE_OPTIONS.map((option) => {
+                const isSelected = selectedPreferences.includes(option.value)
+                return (
+                  <Chip
+                    key={option.value}
+                    label={option.label}
+                    clickable
+                    color={isSelected ? 'warning' : 'default'}
+                    variant={isSelected ? 'filled' : 'outlined'}
+                    onClick={() => togglePreference(option.value)}
+                  />
+                )
+              })}
+            </Stack>
+          </Stack>
         </Stack>
       </Paper>
+
+      {layout ? (
+        <Paper sx={{ p: 2.5 }}>
+          <Stack spacing={2}>
+            <Typography variant="h6">Parim soovitus</Typography>
+            {loading ? (
+              <Stack alignItems="center" py={2}>
+                <CircularProgress size={28} />
+              </Stack>
+            ) : (
+              <RecommendationSummaryPanel
+                hasAvailabilityData={hasAvailabilityData}
+                recommendationError={recommendationError}
+                topRecommendation={topRecommendation}
+                topRecommendationTable={topRecommendationTable}
+                zoneLabel={
+                  topRecommendationTable == null
+                    ? null
+                    : (zoneLabelsByCode[topRecommendationTable.zone] ?? topRecommendationTable.zone)
+                }
+              />
+            )}
+          </Stack>
+        </Paper>
+      ) : null}
 
       <Paper sx={{ p: 2.5 }}>
         <Stack spacing={2}>
@@ -287,14 +406,6 @@ export default function LayoutView() {
               <Tabs
                 value={activePlan ?? getDefaultPlan(layout)}
                 onChange={(_event, nextValue: PlanCode) => {
-                  const nextZoneIsValid =
-                    zoneFilter === ALL_ZONES ||
-                    layout.tables.some(
-                      (table) => table.plan === nextValue && table.zone === zoneFilter,
-                    )
-                  if (!nextZoneIsValid) {
-                    setZoneFilter(ALL_ZONES)
-                  }
                   setSelectionNotice(null)
                   setSelectedTableId(null)
                   setActivePlan(nextValue)
@@ -358,6 +469,7 @@ export default function LayoutView() {
                   isSelected={selectedTableId === table.tableId}
                   isRecommended={topRecommendedTableId === table.tableId}
                   zoneLabel={zoneLabelsByCode[table.zone] ?? table.zone}
+                  stateDetailLines={getUnavailableReasonLines(table)}
                   onSelect={(tableId) => {
                     setSelectionNotice(null)
                     setSelectedTableId(tableId)

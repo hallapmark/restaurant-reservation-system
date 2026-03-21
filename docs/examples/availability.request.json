@@ -3,5 +3,6 @@
   "time": "15:00",
   "partySize": 4,
   "plan": "INDOOR",
-  "zone": "INDOOR"
+  "zone": "INDOOR",
+  "accessibleRequired": false
 }
