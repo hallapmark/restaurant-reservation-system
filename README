@@ -112,6 +112,7 @@ Selles projektis on kasutatud AI abi.
 - `GET /reservations/{id}` on backendis olemas, kuid eraldi reservation detail-vaadet frontendis v1-s ei ole.
 - Zone dropdown eemaldati teadlikult, sest `INDOOR` / `TERRACE` töötab peamise ala-valikuna ning `PRIVATE` jääb privaatsuse ja paigutuse loogika osaks.
 - Praegune v1 ei keela veel broneeringute tegemist minevikku jäävale kuupäeva/kellaaja kombinatsioonile; järgmise sammuna lisaksin sellele frontendi ja backendi valideerimise.
+- Üldiselt on reserveerimissüsteem responsive, aga väga väikestel ekraanidel (nt. mobiil) on mõned parandamiskohad. Tekst "Mängunurk" on mobiilil poolikult näha, samuti mõne laua number. 
 
 ## Live deployment
 
@@ -121,4 +122,4 @@ Selles projektis on kasutatud AI abi.
 
 ## Tööks kulunud aeg
 
-- Hinnanguline ajakulu: umbes 20 tundi.
+- Hinnanguline ajakulu: umbes 22 tundi.
