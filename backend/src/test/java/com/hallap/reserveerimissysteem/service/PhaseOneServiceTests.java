@@ -27,6 +27,9 @@ class PhaseOneServiceTests {
     @Autowired
     private OccupancyService occupancyService;
 
+    @Autowired
+    private AvailabilitySlotsService availabilitySlotsService;
+
     @Test
     void layoutSeedLoadsAndPrivateTablesStayOnIndoorPlan() {
         LayoutResponse layout = layoutService.getLayout();
@@ -171,10 +174,22 @@ class PhaseOneServiceTests {
 
     @Test
     void availabilityMarksInaccessibleTablesUnavailableWhenAccessibilityIsRequired() {
+        LocalTime matchingTime = findTimeWithStatuses(
+                PlanCode.TERRACE,
+                2,
+                Zone.TERRACE,
+                true,
+                Map.of(
+                        "T8", AvailabilityStatus.UNAVAILABLE,
+                        "T9", AvailabilityStatus.UNAVAILABLE,
+                        "T6", AvailabilityStatus.AVAILABLE
+                )
+        );
+
         Map<String, AvailabilityStatus> statuses = availabilityService.calculateAvailability(
                 PlanCode.TERRACE,
                 LocalDate.of(2026, 3, 21),
-                LocalTime.of(15, 0),
+                matchingTime,
                 2,
                 Zone.TERRACE,
                 true
@@ -203,11 +218,49 @@ class PhaseOneServiceTests {
     }
 
     @Test
+    void availabilitySlotsReturnChronologicalNearbyMatchesForSelectedPlan() {
+        AvailabilitySlotsResponse response = availabilitySlotsService.getAvailabilitySlots(new AvailabilitySlotsRequest(
+                "2026-03-21",
+                "19:00",
+                4,
+                PlanCode.INDOOR,
+                null,
+                false,
+                List.of(RecommendationPreference.PRIVACY)
+        ));
+
+        assertThat(response.requestedTime()).isEqualTo("19:00");
+        assertThat(response.slots()).hasSizeLessThanOrEqualTo(7);
+        assertThat(response.slots())
+                .allSatisfy(slot -> assertThat(slot.availableTableCount()).isGreaterThan(0));
+        assertThat(response.slots())
+                .extracting(AvailabilitySlot::time)
+                .isSorted();
+    }
+
+    @Test
+    void availabilitySlotsRespectAccessibilityRequirement() {
+        AvailabilitySlotsResponse response = availabilitySlotsService.getAvailabilitySlots(new AvailabilitySlotsRequest(
+                "2026-03-21",
+                "15:00",
+                2,
+                PlanCode.TERRACE,
+                Zone.TERRACE,
+                true,
+                List.of(RecommendationPreference.PRIVACY)
+        ));
+
+        assertThat(response.slots()).isNotEmpty();
+        assertThat(response.slots())
+                .allSatisfy(slot -> assertThat(slot.topRecommendationId()).isNotEqualTo("T8"));
+    }
+
+    @Test
     void returnsEmptyRecommendationsWhenNoAccessibleCandidatesExist() {
         RecommendationsResponse response = recommendationService.getRecommendations(new RecommendationsRequest(
                 "2026-03-21",
-                "21:00",
-                2,
+                "19:00",
+                8,
                 PlanCode.INDOOR,
                 Zone.PRIVATE,
                 true,
@@ -225,18 +278,7 @@ class PhaseOneServiceTests {
             List<String> requiredTableIds
     ) {
         LocalDate date = LocalDate.of(2026, 3, 21);
-        List<LocalTime> candidateTimes = List.of(
-                LocalTime.of(11, 0),
-                LocalTime.of(12, 0),
-                LocalTime.of(13, 0),
-                LocalTime.of(15, 0),
-                LocalTime.of(17, 0),
-                LocalTime.of(19, 0),
-                LocalTime.of(21, 0),
-                LocalTime.of(22, 0)
-        );
-
-        for (LocalTime candidateTime : candidateTimes) {
+        for (LocalTime candidateTime : candidateTimes()) {
             Map<String, AvailabilityStatus> statuses = availabilityService.calculateAvailability(
                     plan,
                     date,
@@ -253,6 +295,44 @@ class PhaseOneServiceTests {
         }
 
         throw new AssertionError("Could not find a deterministic test timeslot for " + requiredTableIds);
+    }
+
+    private LocalTime findTimeWithStatuses(
+            PlanCode plan,
+            int partySize,
+            Zone zone,
+            boolean accessibleRequired,
+            Map<String, AvailabilityStatus> expectedStatuses
+    ) {
+        LocalDate date = LocalDate.of(2026, 3, 21);
+
+        for (LocalTime candidateTime : candidateTimes()) {
+            Map<String, AvailabilityStatus> statuses = availabilityService.calculateAvailability(
+                    plan,
+                    date,
+                    candidateTime,
+                    partySize,
+                    zone,
+                    accessibleRequired
+            );
+            boolean allMatch = expectedStatuses.entrySet().stream()
+                    .allMatch(entry -> statuses.get(entry.getKey()) == entry.getValue());
+            if (allMatch) {
+                return candidateTime;
+            }
+        }
+
+        throw new AssertionError("Could not find a deterministic test timeslot for " + expectedStatuses);
+    }
+
+    private List<LocalTime> candidateTimes() {
+        List<LocalTime> candidateTimes = new java.util.ArrayList<>();
+        for (LocalTime candidateTime = LocalTime.of(11, 0);
+             !candidateTime.isAfter(LocalTime.of(20, 0));
+             candidateTime = candidateTime.plusMinutes(30)) {
+            candidateTimes.add(candidateTime);
+        }
+        return List.copyOf(candidateTimes);
     }
 
     private int indexOf(RecommendationsResponse response, String tableId) {

@@ -75,6 +75,28 @@ export interface AvailabilityResponse {
   generatedAt: string
 }
 
+export interface AvailabilitySlotsRequest {
+  date: string
+  time: string
+  partySize: number
+  plan: PlanCode
+  zone?: ZoneCode | null
+  accessibleRequired: boolean
+  preferences: RecommendationPreference[]
+}
+
+export interface AvailabilitySlot {
+  time: string
+  availableTableCount: number
+  topRecommendationId: string | null
+}
+
+export interface AvailabilitySlotsResponse {
+  requestedTime: string
+  slots: AvailabilitySlot[]
+  generatedAt: string
+}
+
 export interface Recommendation {
   tableId: string
   score: number

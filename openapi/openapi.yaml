@@ -50,6 +50,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /availability/slots:
+    post:
+      summary: Get nearby available times for the selected plan and party
+      tags:
+        - availability
+      operationId: getAvailabilitySlots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilitySlotsRequest"
+      responses:
+        "200":
+          description: Nearby times with at least one available table
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilitySlotsResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /recommendations:
     post:
       summary: Get ordered recommendations for available tables
@@ -409,6 +435,55 @@ components:
           format: date-time
       required:
         - tableStatusById
+        - generatedAt
+
+    AvailabilitySlotsRequest:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/AvailabilityRequest"
+        - type: object
+          properties:
+            preferences:
+              type: array
+              items:
+                $ref: "#/components/schemas/RecommendationPreference"
+              uniqueItems: true
+              description: >
+                Used only to determine each slot's topRecommendationId.
+
+    AvailabilitySlot:
+      type: object
+      properties:
+        time:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        availableTableCount:
+          type: integer
+          minimum: 0
+        topRecommendationId:
+          type: string
+          nullable: true
+      required:
+        - time
+        - availableTableCount
+        - topRecommendationId
+
+    AvailabilitySlotsResponse:
+      type: object
+      properties:
+        requestedTime:
+          type: string
+          pattern: "^([01]\\d|2[0-3]):[0-5]\\d$"
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailabilitySlot"
+        generatedAt:
+          type: string
+          format: date-time
+      required:
+        - requestedTime
+        - slots
         - generatedAt
 
     Recommendation:

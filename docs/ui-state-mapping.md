@@ -7,6 +7,8 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
   Tagastab ainult saaliplaani geomeetria ja meta info.
 - `POST /api/v1/availability`  
   Tagastab laua staatuse tabeli (`tableStatusById`) antud kuupäeva/kellaaja kombinatsiooni jaoks.
+- `POST /api/v1/availability/slots`  
+  Tagastab sama päeva lähedased vabad kellaajad valitud alal (`INDOOR` või `TERRACE`), koos sobivate laudade arvuga ja parima laua ID-ga.
 - `POST /api/v1/recommendations`  
   Tagastab järjestatud soovitused, sisaldab ka `topRecommendationId`.
 - `POST /api/v1/reservations`  
@@ -18,6 +20,7 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
 - `date`
 - `time`
 - `partySize`
+- `plan`
 - `accessibleRequired`
 
 ## V1 valikulised väljad
@@ -28,8 +31,15 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
 
 - `layout`:  
   Laetakse `GET /layout` vastusest.
+  - `layout.plans`
   - `layout.zones`
+  - `layout.features`
   - `layout.tables`
+
+- `activePlan`:  
+  Kohalik UI state, mida juhivad nii ülemine ala-valik (`Saal` / `Terrass`) kui ka saaliplaani tabid.
+  - On hard requirement kogu päringu jaoks.
+  - `INDOOR` või `TERRACE`
 
 - `tableStatusById`:  
   Põhineb `POST /availability` vastusel.
@@ -42,8 +52,16 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
   Põhineb `POST /recommendations` vastusel.
   - `topRecommendationId`
   - `recommendations[].tableId`
-  - `recommendations[].score`
   - `recommendations[].reasons`
+
+- `availabilitySlots`:  
+  Põhineb `POST /availability/slots` vastusel.
+  - Avatakse eraldi kõrvalvaates / draweris, mitte eraldi route'il.
+  - Sisaldab ainult sama päeva lähedasi kellaaegu.
+  - `slots[].time`
+  - `slots[].availableTableCount`
+  - `slots[].topRecommendationId`
+  - Klikk sloti peal uuendab peamise `time` välja ja sulgeb drawer'i.
 
 - `selectedTableId`:  
   Kohalik UI state, muutub kasutaja klikiga saaliplaanil.  
@@ -74,9 +92,12 @@ Selgitusi:
 ## Märkmed
 - `layout` peab olema **primary view** kogu v1 kogemusel.
 - `availability` ja `recommendations` vastuseid tuleks uuendada sõltuvalt kuupäev+kellaaeg + seltskonna suurus filtritest.
+- `availability/slots` kasutab samu hard filtreid, kuid aitab kasutajal leida lähedasi alternatiivseid kellaaegu.
+- `plan` (`INDOOR` / `TERRACE`) on hard requirement. Praeguses UI-s ei küsita üldist `zone` filtrit eraldi, sest ala valik tehakse plan-tasemel.
 - `accessibleRequired` on hard nõue, mis mõjutab `availability` tulemust.
 - `preferences` mõjutavad ainult soovituse järjestust, mitte laudade baas-saadavust.
 - `/recommendations` peaks olema saadav ka siis, kui ükski laud ei ole otseselt soovitatud – selle juhul `topRecommendationId` on `null` ja nimekiri tühi.
+- Süsteem eeldab demo jaoks keskmiseks külastuse kestuseks umbes 2 tundi. Sama laud ei tohiks juhusliku hõivatuse mudelis vabaneda ebareaalselt kiiresti.
 - Hoveri ja värvikood:
   - `RESERVED`: selgelt välja lülitatav punane olek; hover tekst „Broneeritud selle ajaks”.
-  - `UNAVAILABLE`: madala kontrastiga hall/ebaselge olek; hover tekst „Ei sobi valitud `partySize`/`zone` jaoks”.
+  - `UNAVAILABLE`: madala kontrastiga hall/ebaselge olek; hover tekst selgitab võimalusel konkreetset põhjust (`Ei ole ligipääsetav`, `Ei sobi seltskonna suurusele` jne).

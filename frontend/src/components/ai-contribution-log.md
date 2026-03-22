@@ -28,3 +28,9 @@
 
 - AI aitas vormistada soovituse lühikokkuvõtte jaoks eraldi komponendi.
 - Mina otsustasin, et v1-s kuvatakse ainult üks parim soovitus koos põhjendustega, mitte pikk järjestatud nimekiri alternatiividest.
+
+## AvailabilitySlotsDrawer.tsx
+
+- AI aitas luua eraldi drawer-komponendi lähedaste vabade kellaaegade kuvamiseks.
+- Mina otsustasin, et saadavuse vaade jääb sekundaarselt samale lehele, mitte eraldi route'iks, et saaliplaan püsiks põhivaatena.
+- Mina määrasin ka selle, et sloti valimine uuendab peamise aja-filtri ja toob kasutaja kohe tagasi sama saaliplaani voogu.

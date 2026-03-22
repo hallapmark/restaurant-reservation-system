@@ -1,6 +1,8 @@
 import type {
   AvailabilityRequest,
   AvailabilityResponse,
+  AvailabilitySlotsRequest,
+  AvailabilitySlotsResponse,
   LayoutResponse,
   RecommendationsRequest,
   RecommendationsResponse,
@@ -34,6 +36,20 @@ export async function fetchAvailability(request: AvailabilityRequest): Promise<A
   })
   if (!res.ok) {
     throw new Error(`Availability API failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function fetchAvailabilitySlots(
+  request: AvailabilitySlotsRequest,
+): Promise<AvailabilitySlotsResponse> {
+  const res = await fetch(apiUrl('/availability/slots'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!res.ok) {
+    throw new Error(`Availability slots API failed: ${res.status}`)
   }
   return res.json()
 }

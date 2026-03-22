@@ -1,0 +1,31 @@
+{
+  "requestedTime": "19:00",
+  "slots": [
+    {
+      "time": "17:30",
+      "availableTableCount": 2,
+      "topRecommendationId": "T3"
+    },
+    {
+      "time": "18:00",
+      "availableTableCount": 2,
+      "topRecommendationId": "T3"
+    },
+    {
+      "time": "18:30",
+      "availableTableCount": 1,
+      "topRecommendationId": "T2"
+    },
+    {
+      "time": "19:00",
+      "availableTableCount": 1,
+      "topRecommendationId": "T3"
+    },
+    {
+      "time": "19:30",
+      "availableTableCount": 2,
+      "topRecommendationId": "T5"
+    }
+  ],
+  "generatedAt": "2026-03-22T11:40:00Z"
+}

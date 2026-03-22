@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Checkbox,
   Chip,
   CircularProgress,
@@ -11,20 +12,25 @@ import {
   Tabs,
   TextField,
   Typography,
+  useMediaQuery,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useEffect, useMemo, useState } from 'react'
 import type {
   AvailabilityStatus,
+  AvailabilitySlot,
   LayoutResponse,
   PlanCode,
   Recommendation,
   RecommendationPreference,
 } from '../models/layout'
+import AvailabilitySlotsDrawer from './AvailabilitySlotsDrawer'
 import FloorplanFeatureTile from './FloorplanFeatureTile'
 import FloorplanTableTile from './FloorplanTableTile'
 import RecommendationSummaryPanel from './RecommendationSummaryPanel'
 import {
   fetchAvailability,
+  fetchAvailabilitySlots,
   fetchLayout,
   fetchRecommendations,
 } from '../services/reservationApi'
@@ -56,10 +62,16 @@ function getAllowedPreferencesForPlan(plan: PlanCode | null): RecommendationPref
 }
 
 export default function LayoutView() {
+  const theme = useTheme()
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [layout, setLayout] = useState<LayoutResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [recommendationError, setRecommendationError] = useState<string | null>(null)
+  const [availabilitySlotsOpen, setAvailabilitySlotsOpen] = useState(false)
+  const [availabilitySlotsLoading, setAvailabilitySlotsLoading] = useState(false)
+  const [availabilitySlotsError, setAvailabilitySlotsError] = useState<string | null>(null)
+  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([])
   const [hasAvailabilityData, setHasAvailabilityData] = useState(false)
   const [activePlan, setActivePlan] = useState<PlanCode | null>(null)
   const [partySize, setPartySize] = useState(2)
@@ -220,6 +232,58 @@ export default function LayoutView() {
     partySize,
     accessibleRequired,
     selectedPreferences,
+    activeRecommendationPreferences,
+  ])
+
+  useEffect(() => {
+    if (!availabilitySlotsOpen || !activePlan) {
+      return
+    }
+
+    const plan = activePlan
+    let cancelled = false
+
+    async function loadAvailabilitySlots() {
+      setAvailabilitySlotsLoading(true)
+      setAvailabilitySlotsError(null)
+
+      try {
+        const response = await fetchAvailabilitySlots({
+          date,
+          time,
+          partySize,
+          plan,
+          accessibleRequired,
+          preferences: activeRecommendationPreferences,
+        })
+
+        if (!cancelled) {
+          setAvailabilitySlots(response.slots)
+        }
+      } catch {
+        if (!cancelled) {
+          setAvailabilitySlots([])
+          setAvailabilitySlotsError('Vabade aegade laadimine ebaõnnestus. Palun proovi uuesti.')
+        }
+      } finally {
+        if (!cancelled) {
+          setAvailabilitySlotsLoading(false)
+        }
+      }
+    }
+
+    loadAvailabilitySlots()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    availabilitySlotsOpen,
+    activePlan,
+    date,
+    time,
+    partySize,
+    accessibleRequired,
     activeRecommendationPreferences,
   ])
 
@@ -407,6 +471,15 @@ export default function LayoutView() {
               </Typography>
             ) : null}
           </Stack>
+
+          <Button
+            variant="outlined"
+            onClick={() => setAvailabilitySlotsOpen(true)}
+            disabled={!layout || !activePlan}
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Leia lähimad vabad ajad
+          </Button>
         </Stack>
       </Paper>
 
@@ -535,6 +608,26 @@ export default function LayoutView() {
           )}
         </Stack>
       </Paper>
+
+      <AvailabilitySlotsDrawer
+        open={availabilitySlotsOpen}
+        anchor={isSmallScreen ? 'bottom' : 'right'}
+        onClose={() => setAvailabilitySlotsOpen(false)}
+        loading={availabilitySlotsLoading}
+        error={availabilitySlotsError}
+        slots={availabilitySlots}
+        selectedTime={time}
+        planLabel={activePlanSummary?.label ?? null}
+        date={date}
+        partySize={partySize}
+        accessibleRequired={accessibleRequired}
+        onSelectTime={(nextTime) => {
+          setSelectionNotice(null)
+          setSelectedTableId(null)
+          setTime(nextTime)
+          setAvailabilitySlotsOpen(false)
+        }}
+      />
     </Stack>
   )
 }

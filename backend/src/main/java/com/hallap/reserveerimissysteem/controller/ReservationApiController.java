@@ -2,6 +2,7 @@ package com.hallap.reserveerimissysteem.controller;
 
 import com.hallap.reserveerimissysteem.dto.*;
 import com.hallap.reserveerimissysteem.service.AvailabilityService;
+import com.hallap.reserveerimissysteem.service.AvailabilitySlotsService;
 import com.hallap.reserveerimissysteem.service.LayoutService;
 import com.hallap.reserveerimissysteem.service.RecommendationService;
 import com.hallap.reserveerimissysteem.service.ReservationService;
@@ -10,14 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-// This Controller has been written by me except where noted otherwise. - Mark
-
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ReservationApiController {
     private final LayoutService layoutService;
     private final AvailabilityService availabilityService;
+    private final AvailabilitySlotsService availabilitySlotsService;
     private final RecommendationService recommendationService;
     private final ReservationService reservationService;
 
@@ -31,6 +31,13 @@ public class ReservationApiController {
             @Valid @RequestBody AvailabilityRequest availabilityRequest
     ) {
         return availabilityService.getAvailability(availabilityRequest);
+    }
+
+    @PostMapping("/availability/slots")
+    public AvailabilitySlotsResponse getAvailabilitySlots(
+            @Valid @RequestBody AvailabilitySlotsRequest availabilitySlotsRequest
+    ) {
+        return availabilitySlotsService.getAvailabilitySlots(availabilitySlotsRequest);
     }
 
     @PostMapping("/recommendations")
