@@ -38,10 +38,10 @@ export default function FloorplanFeatureTile({
         const baseStyle =
           feature.type === 'PRIVATE_ROOM'
             ? {
-                backgroundColor: alpha(theme.palette.secondary.main, 0.06),
-                borderColor: alpha(theme.palette.secondary.main, 0.28),
+                backgroundColor: alpha(theme.palette.warning.main, 0.08),
+                borderColor: alpha(theme.palette.secondary.main, 0.18),
                 borderStyle: 'solid',
-                color: theme.palette.secondary.dark,
+                color: theme.palette.text.secondary,
                 borderRadius: 3,
                 alignItems: 'flex-end',
                 justifyContent: 'flex-start',
