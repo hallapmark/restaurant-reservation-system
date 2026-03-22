@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: reservation-backend
+    env: docker
+    plan: starter
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
