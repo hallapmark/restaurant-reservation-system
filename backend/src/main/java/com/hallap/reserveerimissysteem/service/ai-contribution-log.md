@@ -7,4 +7,5 @@
 - Mina määrasin ka soovituste skoorimise lähtereeglid, plaani (`INDOOR` / `TERRACE`) eristuse ning selle, et `PRIVATE` jääb tsooniks siseruumi sees.
 - Hiljem otsustasin mina, et ligipääsetavus ei ole enam soovituse boonus, vaid hard constraint saadavuse loogikas; AI aitas selle muudatuse teenusekihti läbi viia.
 - Lähedaste vabade kellaaegade vaate jaoks otsustasin mina lisada eraldi sloti-teenuse ja arvestada keskmise külastuse kestusega; AI aitas tehniliselt teostada 2-tunnise vaikimisi broneeringuakna ja sellele rajatud slotiotsingu.
+- Broneeringu kinnitamise etapis otsustasin mina kasutada backendi in-memory runtime store'i, et kasutaja loodud broneeringud mõjutaksid kohe saadavust ja soovitusi sama rakenduse töö jooksul; AI aitas selle loogika tehnilise teostusega.
 - Hilisemaid parandusi tegin mina jooksvalt, kui selgusid paigutuse, soovitusjärjestuse või andmelepingu kitsaskohad.

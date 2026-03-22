@@ -8,6 +8,10 @@ export type AvailabilityStatus = 'AVAILABLE' | 'RESERVED' | 'UNAVAILABLE'
 
 export type RecommendationPreference = 'PRIVACY' | 'WINDOW' | 'NEAR_PLAY_AREA'
 
+export type ReservationPreference = RecommendationPreference | 'ACCESSIBLE'
+
+export type ReservationStatus = 'CONFIRMED' | 'REJECTED' | 'CANCELLED'
+
 export interface LayoutPoint {
   x: number
   y: number
@@ -116,4 +120,26 @@ export interface RecommendationsRequest {
 export interface RecommendationsResponse {
   topRecommendationId: string | null
   recommendations: Recommendation[]
+}
+
+export interface ReservationRequest {
+  date: string
+  time: string
+  partySize: number
+  tableId: string
+  customerName: string
+  customerPhone?: string | null
+  customerEmail?: string | null
+  preferences: ReservationPreference[]
+}
+
+export interface ReservationResponse {
+  reservationId: string
+  tableId: string
+  date: string
+  time: string
+  partySize: number
+  status: ReservationStatus
+  createdAt: string
+  message: string
 }

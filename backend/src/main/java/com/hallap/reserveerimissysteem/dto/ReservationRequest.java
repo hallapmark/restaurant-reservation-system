@@ -13,7 +13,7 @@ public record ReservationRequest(
         @NotBlank @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$") String time,
         @Min(1) int partySize,
         @NotBlank String tableId,
-        String customerName,
+        @NotBlank String customerName,
         String customerPhone,
         @Email String customerEmail,
         List<Preference> preferences

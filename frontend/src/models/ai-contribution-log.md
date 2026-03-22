@@ -8,3 +8,4 @@
 - Hiljem laiendasin AI abil mudelitüüpe plaanide (`PlanCode`), saaliplaani feature'ite ja rikkama lauaandmestiku jaoks, et frontend vastaks päris backend lepingule.
 - Soovituste UI lisamisel otsustasin mina eristada hard requirement'i (`accessibleRequired`) ja soovituse soft preference'eid, AI aitas nende tüüpide ja request-kujude tehnilise kohandamisega.
 - Lähedaste vabade kellaaegade vaate lisamisel laiendasin AI abil ka frontendi mudeleid `availability/slots` request/response kujude jaoks.
+- Broneerimise pärisvoo lisamisel laiendasin AI abil ka frontendi mudeleid `ReservationRequest` / `ReservationResponse` kujude jaoks.

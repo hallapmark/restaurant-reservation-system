@@ -7,6 +7,7 @@
   "customerPhone": "+3725550123",
   "customerEmail": "marta.v@example.com",
   "preferences": [
-    "WINDOW"
+    "WINDOW",
+    "ACCESSIBLE"
   ]
 }

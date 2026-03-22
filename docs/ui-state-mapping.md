@@ -74,6 +74,8 @@ See dokument kirjeldab andmevoogu restorani laua broneerimise äpi v1 flow jaoks
   `POST /reservations` vastusest:
   - `reservationId`
   - `status`
+  - `message`
+  - Eduka broneeringu järel peab sama laud muutuma järgmistes `availability` tulemustes `RESERVED` olekusse.
 
 ## Render-prioriteet saaliplaanil (konflikti vältimine)
 Kui mitu olekut kattuvad, renderitakse prioriteedis:
@@ -96,6 +98,8 @@ Selgitusi:
 - `plan` (`INDOOR` / `TERRACE`) on hard requirement. Praeguses UI-s ei küsita üldist `zone` filtrit eraldi, sest ala valik tehakse plan-tasemel.
 - `accessibleRequired` on hard nõue, mis mõjutab `availability` tulemust.
 - `preferences` mõjutavad ainult soovituse järjestust, mitte laudade baas-saadavust.
+- `POST /reservations` kasutab valitud lauda ja hetkel aktiivset ajahetke. v1 lihtsas UI-s küsitakse kasutajalt ainult nime.
+- Kui `accessibleRequired` on aktiivne, lisatakse broneeringu payload'i ka `ACCESSIBLE`, et broneeringu metaandmed peegeldaksid kasutaja nõuet.
 - `/recommendations` peaks olema saadav ka siis, kui ükski laud ei ole otseselt soovitatud – selle juhul `topRecommendationId` on `null` ja nimekiri tühi.
 - Süsteem eeldab demo jaoks keskmiseks külastuse kestuseks umbes 2 tundi. Sama laud ei tohiks juhusliku hõivatuse mudelis vabaneda ebareaalselt kiiresti.
 - Hoveri ja värvikood:

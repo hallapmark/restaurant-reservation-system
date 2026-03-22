@@ -5,6 +5,7 @@ import com.hallap.reserveerimissysteem.dto.PlanCode;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @SuppressWarnings("unused")
@@ -25,5 +26,11 @@ public class LayoutService {
 
     public List<LayoutResponse.LayoutFeature> getFeaturesForPlan(PlanCode plan) {
         return layoutSeedRepository.getFeaturesForPlan(plan);
+    }
+
+    public Optional<LayoutResponse.TableGeometry> getTableById(String tableId) {
+        return layoutSeedRepository.getLayout().tables().stream()
+                .filter(table -> table.tableId().equals(tableId))
+                .findFirst();
     }
 }

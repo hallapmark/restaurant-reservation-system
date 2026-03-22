@@ -1,9 +1,11 @@
 package com.hallap.reserveerimissysteem.service;
 
 import com.hallap.reserveerimissysteem.dto.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class PhaseOneServiceTests {
@@ -29,6 +32,17 @@ class PhaseOneServiceTests {
 
     @Autowired
     private AvailabilitySlotsService availabilitySlotsService;
+
+    @Autowired
+    private ReservationService reservationService;
+
+    @Autowired
+    private RuntimeReservationStore runtimeReservationStore;
+
+    @BeforeEach
+    void clearRuntimeReservations() {
+        runtimeReservationStore.clear();
+    }
 
     @Test
     void layoutSeedLoadsAndPrivateTablesStayOnIndoorPlan() {
@@ -269,6 +283,132 @@ class PhaseOneServiceTests {
 
         assertThat(response.topRecommendationId()).isNull();
         assertThat(response.recommendations()).isEmpty();
+    }
+
+    @Test
+    void createReservationStoresReservationAndLookupReturnsIt() {
+        LocalTime matchingTime = findTimeWithAvailableTables(
+                PlanCode.INDOOR,
+                4,
+                Zone.INDOOR,
+                List.of("T2")
+        );
+
+        ReservationResponse created = reservationService.createReservation(new ReservationRequest(
+                "2026-03-21",
+                matchingTime.toString(),
+                4,
+                "T2",
+                "Marta V.",
+                null,
+                null,
+                List.of(Preference.WINDOW)
+        ));
+
+        ReservationResponse loaded = reservationService.getReservation(created.reservationId());
+
+        assertThat(created.status()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(loaded.reservationId()).isEqualTo(created.reservationId());
+        assertThat(loaded.tableId()).isEqualTo("T2");
+        assertThat(loaded.partySize()).isEqualTo(4);
+    }
+
+    @Test
+    void createdReservationBlocksSameTableForOverlappingTimes() {
+        LocalTime matchingTime = findTimeWithAvailableTables(
+                PlanCode.INDOOR,
+                4,
+                Zone.INDOOR,
+                List.of("T2")
+        );
+
+        reservationService.createReservation(new ReservationRequest(
+                "2026-03-21",
+                matchingTime.toString(),
+                4,
+                "T2",
+                "Marta V.",
+                null,
+                null,
+                List.of()
+        ));
+
+        Map<String, AvailabilityStatus> immediateStatuses = availabilityService.calculateAvailability(
+                PlanCode.INDOOR,
+                LocalDate.of(2026, 3, 21),
+                matchingTime,
+                4,
+                Zone.INDOOR,
+                false
+        );
+        Map<String, AvailabilityStatus> overlappingStatuses = availabilityService.calculateAvailability(
+                PlanCode.INDOOR,
+                LocalDate.of(2026, 3, 21),
+                matchingTime.plusMinutes(90),
+                4,
+                Zone.INDOOR,
+                false
+        );
+
+        assertThat(immediateStatuses.get("T2")).isEqualTo(AvailabilityStatus.RESERVED);
+        assertThat(overlappingStatuses.get("T2")).isEqualTo(AvailabilityStatus.RESERVED);
+    }
+
+    @Test
+    void createReservationRejectsOverlappingBooking() {
+        LocalTime matchingTime = findTimeWithAvailableTables(
+                PlanCode.INDOOR,
+                4,
+                Zone.INDOOR,
+                List.of("T2")
+        );
+
+        reservationService.createReservation(new ReservationRequest(
+                "2026-03-21",
+                matchingTime.toString(),
+                4,
+                "T2",
+                "Marta V.",
+                null,
+                null,
+                List.of()
+        ));
+
+        assertThatThrownBy(() -> reservationService.createReservation(new ReservationRequest(
+                "2026-03-21",
+                matchingTime.toString(),
+                4,
+                "T2",
+                "Karl K.",
+                null,
+                null,
+                List.of()
+        )))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("409 CONFLICT");
+    }
+
+    @Test
+    void createReservationRejectsInaccessibleTableWhenAccessibilityPreferenceIsPresent() {
+        LocalTime matchingTime = findTimeWithAvailableTables(
+                PlanCode.TERRACE,
+                2,
+                Zone.TERRACE,
+                List.of("T8")
+        );
+
+        assertThatThrownBy(() -> reservationService.createReservation(new ReservationRequest(
+                "2026-03-21",
+                matchingTime.toString(),
+                2,
+                "T8",
+                "Marta V.",
+                null,
+                null,
+                List.of(Preference.ACCESSIBLE)
+        )))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("400 BAD_REQUEST");
     }
 
     private LocalTime findTimeWithAvailableTables(

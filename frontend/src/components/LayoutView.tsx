@@ -23,12 +23,16 @@ import type {
   PlanCode,
   Recommendation,
   RecommendationPreference,
+  ReservationPreference,
+  ReservationResponse,
 } from '../models/layout'
 import AvailabilitySlotsDrawer from './AvailabilitySlotsDrawer'
 import FloorplanFeatureTile from './FloorplanFeatureTile'
 import FloorplanTableTile from './FloorplanTableTile'
 import RecommendationSummaryPanel from './RecommendationSummaryPanel'
+import ReservationBookingPanel from './ReservationBookingPanel'
 import {
+  createReservation,
   fetchAvailability,
   fetchAvailabilitySlots,
   fetchLayout,
@@ -84,6 +88,11 @@ export default function LayoutView() {
   const [topRecommendedTableId, setTopRecommendedTableId] = useState<string | null>(null)
   const [topRecommendation, setTopRecommendation] = useState<Recommendation | null>(null)
   const [selectionNotice, setSelectionNotice] = useState<string | null>(null)
+  const [reservationSubmitting, setReservationSubmitting] = useState(false)
+  const [reservationError, setReservationError] = useState<string | null>(null)
+  const [reservationSuccess, setReservationSuccess] = useState<ReservationResponse | null>(null)
+  const [customerName, setCustomerName] = useState('')
+  const [statusRefreshKey, setStatusRefreshKey] = useState(0)
   const allowedPreferences = useMemo(
     () => getAllowedPreferencesForPlan(activePlan),
     [activePlan],
@@ -99,6 +108,13 @@ export default function LayoutView() {
     () =>
       selectedPreferences.filter((preference) => allowedPreferences.includes(preference)),
     [selectedPreferences, allowedPreferences],
+  )
+  const activeReservationPreferences = useMemo<ReservationPreference[]>(
+    () =>
+      accessibleRequired
+        ? [...activeRecommendationPreferences, 'ACCESSIBLE']
+        : [...activeRecommendationPreferences],
+    [activeRecommendationPreferences, accessibleRequired],
   )
   const currentAvailableTableCount = useMemo(
     () =>
@@ -245,6 +261,7 @@ export default function LayoutView() {
     accessibleRequired,
     selectedPreferences,
     activeRecommendationPreferences,
+    statusRefreshKey,
   ])
 
   useEffect(() => {
@@ -297,6 +314,7 @@ export default function LayoutView() {
     partySize,
     accessibleRequired,
     activeRecommendationPreferences,
+    statusRefreshKey,
   ])
 
   const planTables = useMemo(
@@ -325,6 +343,13 @@ export default function LayoutView() {
         ? null
         : planTables.find((table) => table.tableId === topRecommendedTableId) ?? null,
     [planTables, topRecommendedTableId],
+  )
+  const selectedTable = useMemo(
+    () =>
+      selectedTableId == null
+        ? null
+        : planTables.find((table) => table.tableId === selectedTableId) ?? null,
+    [planTables, selectedTableId],
   )
 
   function getUnavailableReasonLines(table: LayoutResponse['tables'][number]) {
@@ -365,6 +390,15 @@ export default function LayoutView() {
       return
     }
 
+    setReservationSuccess(null)
+    setReservationError(null)
+  }, [selectedTableId])
+
+  useEffect(() => {
+    if (!selectedTableId) {
+      return
+    }
+
     const selectedStatus = tableStatusById[selectedTableId]
     if (!selectedStatus || selectedStatus === 'AVAILABLE') {
       return
@@ -377,6 +411,45 @@ export default function LayoutView() {
         : `Laua ${selectedTableId} saadavus muutus. See laud ei sobi enam valitud tingimustega.`,
     )
   }, [selectedTableId, tableStatusById])
+
+  async function handleReservationSubmit() {
+    if (!selectedTableId) {
+      return
+    }
+
+    if (customerName.trim() === '') {
+      setReservationError('Sisesta palun broneerija nimi.')
+      return
+    }
+
+    setReservationSubmitting(true)
+    setReservationError(null)
+    setReservationSuccess(null)
+
+    try {
+      const response = await createReservation({
+        date,
+        time,
+        partySize,
+        tableId: selectedTableId,
+        customerName: customerName.trim(),
+        preferences: activeReservationPreferences,
+      })
+      setReservationSuccess(response)
+      setSelectedTableId(null)
+      setSelectionNotice(null)
+      setCustomerName('')
+      setStatusRefreshKey((current) => current + 1)
+    } catch (error) {
+      setReservationError(
+        error instanceof Error ? error.message : 'Broneeringu loomine ebaõnnestus. Palun proovi uuesti.',
+      )
+      setSelectedTableId(null)
+      setStatusRefreshKey((current) => current + 1)
+    } finally {
+      setReservationSubmitting(false)
+    }
+  }
 
   return (
     <Stack spacing={3}>
@@ -400,6 +473,7 @@ export default function LayoutView() {
                       variant={isSelected ? 'filled' : 'outlined'}
                       onClick={() => {
                         setSelectionNotice(null)
+                        setReservationError(null)
                         setSelectedTableId(null)
                         setActivePlan(plan.code)
                       }}
@@ -411,8 +485,13 @@ export default function LayoutView() {
             <TextField
               type="date"
               label="Kuupäev"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
+                value={date}
+              onChange={(event) => {
+                setSelectionNotice(null)
+                setReservationError(null)
+                setSelectedTableId(null)
+                setDate(event.target.value)
+              }}
               slotProps={{ inputLabel: { shrink: true } }}
               sx={{ width: { xs: '100%', md: 200 } }}
             />
@@ -421,7 +500,12 @@ export default function LayoutView() {
                 type="time"
                 label="Aeg"
                 value={time}
-                onChange={(event) => setTime(event.target.value)}
+                onChange={(event) => {
+                  setSelectionNotice(null)
+                  setReservationError(null)
+                  setSelectedTableId(null)
+                  setTime(event.target.value)
+                }}
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ width: '100%' }}
               />
@@ -444,6 +528,9 @@ export default function LayoutView() {
                 if (Number.isNaN(nextValue)) {
                   return
                 }
+                setSelectionNotice(null)
+                setReservationError(null)
+                setSelectedTableId(null)
                 setPartySize(Math.max(1, Math.min(20, nextValue)))
               }}
               slotProps={{ htmlInput: { min: 1, max: 20 } }}
@@ -460,7 +547,12 @@ export default function LayoutView() {
               control={
                 <Checkbox
                   checked={accessibleRequired}
-                  onChange={(event) => setAccessibleRequired(event.target.checked)}
+                  onChange={(event) => {
+                    setSelectionNotice(null)
+                    setReservationError(null)
+                    setSelectedTableId(null)
+                    setAccessibleRequired(event.target.checked)
+                  }}
                 />
               }
               label="Ligipääsetavus vajalik"
@@ -479,7 +571,12 @@ export default function LayoutView() {
                     clickable
                     color={isSelected ? 'warning' : 'default'}
                     variant={isSelected ? 'filled' : 'outlined'}
-                    onClick={() => togglePreference(option.value)}
+                    onClick={() => {
+                      setSelectionNotice(null)
+                      setReservationError(null)
+                      setSelectedTableId(null)
+                      togglePreference(option.value)
+                    }}
                   />
                 )
               })}
@@ -593,6 +690,7 @@ export default function LayoutView() {
                   stateDetailLines={getUnavailableReasonLines(table)}
                   onSelect={(tableId) => {
                     setSelectionNotice(null)
+                    setReservationError(null)
                     setSelectedTableId(tableId)
                   }}
                 />
@@ -611,8 +709,26 @@ export default function LayoutView() {
 
           {selectionNotice ? (
             <Alert severity="warning">{selectionNotice}</Alert>
-          ) : selectedTableId ? (
-            <Alert severity="success">Valisid laua {selectedTableId}.</Alert>
+          ) : reservationSuccess ? (
+            <Alert severity="success">
+              {reservationSuccess.message} ID: {reservationSuccess.reservationId}, laud{' '}
+              {reservationSuccess.tableId}, aeg {reservationSuccess.date} {reservationSuccess.time}.
+            </Alert>
+          ) : selectedTable ? (
+            <ReservationBookingPanel
+              tableLabel={selectedTable.label}
+              tableId={selectedTable.tableId}
+              date={date}
+              time={time}
+              partySize={partySize}
+              customerName={customerName}
+              error={reservationError}
+              submitting={reservationSubmitting}
+              onCustomerNameChange={setCustomerName}
+              onSubmit={handleReservationSubmit}
+            />
+          ) : reservationError ? (
+            <Alert severity="error">{reservationError}</Alert>
           ) : (
             <Alert severity="info">Vali saaliplaanilt laud.</Alert>
           )}

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class OccupancyService {
@@ -18,6 +19,11 @@ public class OccupancyService {
     private static final LocalTime LAST_BOOKING_START = LocalTime.of(20, 0);
     private static final int SLOT_STEP_MINUTES = 30;
     private static final int EXPECTED_BOOKING_DURATION_MINUTES = 120;
+    private final RuntimeReservationStore runtimeReservationStore;
+
+    public OccupancyService(RuntimeReservationStore runtimeReservationStore) {
+        this.runtimeReservationStore = runtimeReservationStore;
+    }
 
     public Set<String> getReservedTableIds(
             PlanCode plan,
@@ -34,7 +40,19 @@ public class OccupancyService {
             }
         }
 
+        reservedTableIds.addAll(runtimeReservationStore.getReservedTableIds(
+                date,
+                time,
+                tables.stream()
+                        .map(LayoutResponse.TableGeometry::tableId)
+                        .collect(Collectors.toSet())
+        ));
+
         return reservedTableIds;
+    }
+
+    public int getExpectedBookingDurationMinutes() {
+        return EXPECTED_BOOKING_DURATION_MINUTES;
     }
 
     private List<GeneratedReservation> generateReservations(

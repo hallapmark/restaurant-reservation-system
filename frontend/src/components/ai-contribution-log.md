@@ -34,3 +34,8 @@
 - AI aitas luua eraldi drawer-komponendi lähedaste vabade kellaaegade kuvamiseks.
 - Mina otsustasin, et saadavuse vaade jääb sekundaarselt samale lehele, mitte eraldi route'iks, et saaliplaan püsiks põhivaatena.
 - Mina määrasin ka selle, et sloti valimine uuendab peamise aja-filtri ja toob kasutaja kohe tagasi sama saaliplaani voogu.
+
+## ReservationBookingPanel.tsx
+
+- AI aitas vormistada valitud laua jaoks lihtsa inline-broneerimise paneeli.
+- Mina otsustasin, et v1 broneerimisvoog jääb võimalikult lihtsaks: üks nimeväli, kinnitus samal lehel ja eraldi detailvaadet veel ei lisata.
