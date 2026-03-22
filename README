@@ -111,6 +111,7 @@ Selles projektis on kasutatud AI abi.
 - Brauseri native `time` input võib mõnes OS/browser locale kombinatsioonis kuvada aega 12-tunnises formaadis (`7 PM`), kuigi rakenduse sisemine ja backendis kasutatav formaat on `HH:mm`.
 - `GET /reservations/{id}` on backendis olemas, kuid eraldi reservation detail-vaadet frontendis v1-s ei ole.
 - Zone dropdown eemaldati teadlikult, sest `INDOOR` / `TERRACE` töötab peamise ala-valikuna ning `PRIVATE` jääb privaatsuse ja paigutuse loogika osaks.
+- Praegune v1 ei keela veel broneeringute tegemist minevikku jäävale kuupäeva/kellaaja kombinatsioonile; järgmise sammuna lisaksin sellele frontendi ja backendi valideerimise.
 
 ## Live deployment
 
