@@ -18,6 +18,10 @@ Rakendus on tehtud monorepona:
 
 ![Rakenduse kuvatõmmis](./screenshot.png)
 
+## Live demo
+
+[https://reserveerimissysteem.web.app](https://reserveerimissysteem.web.app)
+
 ## Kuidas käivitada
 
 ### Eeldused
@@ -107,6 +111,12 @@ Selles projektis on kasutatud AI abi.
 - Brauseri native `time` input võib mõnes OS/browser locale kombinatsioonis kuvada aega 12-tunnises formaadis (`7 PM`), kuigi rakenduse sisemine ja backendis kasutatav formaat on `HH:mm`.
 - `GET /reservations/{id}` on backendis olemas, kuid eraldi reservation detail-vaadet frontendis v1-s ei ole.
 - Zone dropdown eemaldati teadlikult, sest `INDOOR` / `TERRACE` töötab peamise ala-valikuna ning `PRIVATE` jääb privaatsuse ja paigutuse loogika osaks.
+
+## Live deployment
+
+- Frontend on hetkel üles pandud Firebase Hostingusse.
+- Backend on hetkel üles pandud Renderisse.
+- README põhiline käivitusjuhend jääb siiski lokaalse arenduse / hindamise jaoks.
 
 ## Tööks kulunud aeg
 
