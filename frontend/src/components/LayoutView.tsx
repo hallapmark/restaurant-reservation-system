@@ -100,6 +100,18 @@ export default function LayoutView() {
       selectedPreferences.filter((preference) => allowedPreferences.includes(preference)),
     [selectedPreferences, allowedPreferences],
   )
+  const currentAvailableTableCount = useMemo(
+    () =>
+      Object.values(tableStatusById).filter((status) => status === 'AVAILABLE').length,
+    [tableStatusById],
+  )
+  const availabilityHelperLabel = useMemo(() => {
+    if (!hasAvailabilityData) {
+      return 'Sirvi teisi kellaaegu'
+    }
+
+    return currentAvailableTableCount > 0 ? 'Vaata ka teisi aegu' : 'Leia lähim vaba aeg'
+  }, [currentAvailableTableCount, hasAvailabilityData])
 
   useEffect(() => {
     let cancelled = false
@@ -404,14 +416,25 @@ export default function LayoutView() {
               slotProps={{ inputLabel: { shrink: true } }}
               sx={{ width: { xs: '100%', md: 200 } }}
             />
-            <TextField
-              type="time"
-              label="Aeg"
-              value={time}
-              onChange={(event) => setTime(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ width: { xs: '100%', md: 160 } }}
-            />
+            <Stack spacing={0.5} sx={{ width: { xs: '100%', md: 160 } }} alignItems="flex-start">
+              <TextField
+                type="time"
+                label="Aeg"
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ width: '100%' }}
+              />
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setAvailabilitySlotsOpen(true)}
+                disabled={!layout || !activePlan}
+                sx={{ px: 0, minWidth: 0 }}
+              >
+                {availabilityHelperLabel}
+              </Button>
+            </Stack>
             <TextField
               type="number"
               label="Seltskonna suurus"
@@ -442,10 +465,6 @@ export default function LayoutView() {
               }
               label="Ligipääsetavus vajalik"
             />
-            <Typography variant="body2" color="text.secondary">
-              Ligipääsetavuse nõue piirab sobivaid laudu kohe. Eelistused mõjutavad ainult
-              soovituste järjestust.
-            </Typography>
           </Stack>
 
           <Stack spacing={1}>
@@ -471,15 +490,6 @@ export default function LayoutView() {
               </Typography>
             ) : null}
           </Stack>
-
-          <Button
-            variant="outlined"
-            onClick={() => setAvailabilitySlotsOpen(true)}
-            disabled={!layout || !activePlan}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            Leia lähimad vabad ajad
-          </Button>
         </Stack>
       </Paper>
 
