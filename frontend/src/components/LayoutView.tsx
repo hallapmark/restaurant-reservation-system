@@ -79,6 +79,7 @@ export default function LayoutView() {
   const [hasAvailabilityData, setHasAvailabilityData] = useState(false)
   const [activePlan, setActivePlan] = useState<PlanCode | null>(null)
   const [partySize, setPartySize] = useState(2)
+  const [partySizeInput, setPartySizeInput] = useState('2')
   const [accessibleRequired, setAccessibleRequired] = useState(false)
   const [selectedPreferences, setSelectedPreferences] = useState<RecommendationPreference[]>([])
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
@@ -522,16 +523,34 @@ export default function LayoutView() {
             <TextField
               type="number"
               label="Seltskonna suurus"
-              value={partySize}
+              value={partySizeInput}
               onChange={(event) => {
-                const nextValue = Number(event.target.value)
-                if (Number.isNaN(nextValue)) {
+                const nextValue = event.target.value
+                if (nextValue === '') {
+                  setPartySizeInput('')
                   return
                 }
+
+                if (!/^\d+$/.test(nextValue)) {
+                  return
+                }
+
+                const parsedValue = Number(nextValue)
                 setSelectionNotice(null)
                 setReservationError(null)
                 setSelectedTableId(null)
-                setPartySize(Math.max(1, Math.min(20, nextValue)))
+                setPartySizeInput(nextValue)
+                setPartySize(Math.max(1, Math.min(20, parsedValue)))
+              }}
+              onBlur={() => {
+                if (partySizeInput === '') {
+                  setPartySizeInput(String(partySize))
+                  return
+                }
+
+                const normalizedValue = Math.max(1, Math.min(20, Number(partySizeInput)))
+                setPartySize(normalizedValue)
+                setPartySizeInput(String(normalizedValue))
               }}
               slotProps={{ htmlInput: { min: 1, max: 20 } }}
               sx={{ width: { xs: '100%', md: 220 } }}
